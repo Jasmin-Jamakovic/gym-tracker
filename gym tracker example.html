@@ -1,0 +1,1600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gym Tracker (example)</title>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+<style>
+  :root {
+    --bg: #0f1115; --card: #171a21; --card2: #1e222b; --line: #2a2f3a;
+    --text: #e8eaf0; --muted: #8b93a7;
+    --blue: #4f8cff; --orange: #ff9f43; --green: #35c47c; --purple: #a77bff; --red: #ff5d5d;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  button, input, select { font: inherit; color: inherit; }
+  h1, h2, h3 { margin: 0; font-weight: 650; }
+  h2 { font-size: 22px; }
+  h3 { font-size: 15px; }
+
+  .brand { display: flex; align-items: center; gap: 10px; }
+  .brand h1 { font-size: 17px; white-space: nowrap; }
+  .logo { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; background: linear-gradient(135deg, var(--blue), var(--purple)); color: #fff; }
+  .logo svg { width: 19px; height: 19px; }
+  .pill { font-size: 11px; padding: 2px 8px; border-radius: 99px; background: var(--card2); color: var(--muted); border: 1px solid var(--line); }
+  svg.ic { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+
+  /* desktop sidebar */
+  .side { position: fixed; inset: 0 auto 0 0; width: 236px; background: #12151b; border-right: 1px solid var(--line); display: flex; flex-direction: column; padding: 18px 14px; z-index: 20; }
+  .side .brand { padding: 0 6px 22px; }
+  .nav-label { color: #5f6779; font-size: 11px; text-transform: uppercase; letter-spacing: .08em; padding: 14px 10px 6px; }
+  .nav-item { position: relative; display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 12px; margin-bottom: 2px; border: 0; border-radius: 10px; background: none; color: var(--muted); cursor: pointer; text-align: left; transition: background .15s, color .15s; }
+  .nav-item:hover { background: var(--card); color: var(--text); }
+  .nav-item:hover svg.ic { color: var(--c); }
+  .nav-item.active { background: color-mix(in srgb, var(--c) 15%, transparent); color: var(--text); font-weight: 600; }
+  .nav-item.active svg.ic { color: var(--c); }
+  .nav-item.active::before { content: ""; position: absolute; left: -14px; top: 8px; bottom: 8px; width: 3px; border-radius: 0 3px 3px 0; background: var(--c); }
+  .nav-item .badge { margin-left: auto; font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 99px; background: var(--card2); color: var(--muted); }
+  .nav-item.active .badge { background: color-mix(in srgb, var(--c) 25%, transparent); color: var(--text); }
+  .side-foot { margin-top: auto; padding: 12px 10px 0; border-top: 1px solid var(--line); color: var(--muted); font-size: 12px; display: flex; align-items: center; gap: 8px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 3px rgba(53,196,124,.18); }
+
+  /* mobile top bar + bottom tabs */
+  .mtop, .bottomnav { display: none; }
+  .mtop { position: sticky; top: 0; z-index: 20; align-items: center; justify-content: space-between; padding: 12px 16px; background: rgba(15,17,21,.9); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
+  .icon-btn { width: 38px; height: 38px; border-radius: 10px; border: 1px solid var(--line); background: var(--card); color: var(--muted); display: grid; place-items: center; cursor: pointer; }
+  .icon-btn.active { color: var(--text); border-color: #3a4150; }
+  .bottomnav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; background: rgba(18,21,27,.94); backdrop-filter: blur(12px); border-top: 1px solid var(--line); padding: 6px 6px calc(6px + env(safe-area-inset-bottom)); grid-template-columns: repeat(6, 1fr); }
+  .bn-item { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 6px 2px; border: 0; background: none; color: var(--muted); font-size: 10.5px; cursor: pointer; border-radius: 12px; }
+  .bn-item .bn-ic { width: 46px; height: 28px; border-radius: 99px; display: grid; place-items: center; transition: background .15s; }
+  .bn-item.active { color: var(--text); font-weight: 600; }
+  .bn-item.active .bn-ic { background: color-mix(in srgb, var(--c) 20%, transparent); color: var(--c); }
+
+  .shell { margin-left: 236px; }
+  .banner { margin: 20px 20px 0; max-width: 1200px; padding: 10px 14px; border-radius: 10px; background: #1b2333; border: 1px solid #2b3a57; color: #b9c8e6; font-size: 13px; }
+  @media (min-width: 1280px) { .banner { margin: 20px auto 0; width: calc(100% - 40px); } }
+
+  main { padding: 20px; max-width: 1200px; margin: 0 auto; animation: pageIn .22s ease; }
+  @keyframes pageIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  .sec-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+  .sec-head .btns { display: flex; gap: 8px; flex-wrap: wrap; }
+  .muted { color: var(--muted); }
+  .small { font-size: 12px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px; margin-bottom: 16px; }
+  .card > h3 { margin-bottom: 12px; }
+  .card-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+  .card-foot { display: flex; justify-content: space-between; gap: 8px; margin-top: 12px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid2 > .card { margin-bottom: 16px; }
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 16px; }
+  .stat { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; border-top: 3px solid var(--c); }
+  .stat .label { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+  .stat .big { font-size: 26px; font-weight: 700; margin-top: 4px; }
+  .stat .sub { color: var(--muted); font-size: 13px; }
+  .bar { height: 6px; background: var(--card2); border-radius: 99px; margin-top: 10px; overflow: hidden; }
+  .bar > div { height: 100%; background: var(--c); border-radius: 99px; }
+  .ministats { display: flex; gap: 24px; flex-wrap: wrap; margin-bottom: 8px; }
+  .ministats div b { display: block; font-size: 18px; }
+  .ministats div span { color: var(--muted); font-size: 12px; }
+
+  button.primary, button.ghost, button.danger-btn { border-radius: 9px; padding: 8px 14px; cursor: pointer; border: 1px solid transparent; }
+  button.primary { background: var(--blue); color: #fff; }
+  button.primary:hover { filter: brightness(1.1); }
+  button.ghost { background: var(--card2); border-color: var(--line); }
+  button.ghost:hover { border-color: #3a4150; }
+  button.danger-btn { background: transparent; border-color: #5a2a2a; color: var(--red); }
+  button.icon { background: none; border: 0; color: var(--muted); cursor: pointer; padding: 4px 6px; border-radius: 6px; font-size: 12px; }
+  button.icon:hover { color: var(--text); background: var(--card2); }
+  button.icon.danger:hover { color: var(--red); }
+  .quick { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+
+  .tablewrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; color: var(--muted); font-weight: 500; font-size: 12px; padding: 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  td { padding: 8px; border-bottom: 1px solid #20242d; vertical-align: top; }
+  tr:hover td { background: #1a1e26; }
+  td.rowact { text-align: right; white-space: nowrap; width: 1%; }
+  .empty { color: var(--muted); padding: 12px 0; }
+
+  .checks { display: grid; gap: 8px; }
+  .check { display: grid; grid-template-columns: 24px 1fr auto; gap: 10px; align-items: center; text-align: left; background: var(--card2); border: 1px solid var(--line); border-radius: 10px; padding: 9px 12px; cursor: pointer; }
+  .check .box { width: 22px; height: 22px; border-radius: 6px; border: 2px solid var(--line); display: grid; place-items: center; font-size: 13px; }
+  .check.on { border-color: #23573d; background: #17251e; }
+  .check.on .box { background: var(--green); border-color: var(--green); color: #08130d; font-weight: 700; }
+
+  .cdot { width: 10px; height: 10px; border-radius: 50%; flex: none; background: var(--c); }
+  .seg { display: inline-flex; background: var(--card2); border: 1px solid var(--line); border-radius: 10px; padding: 3px; }
+  .seg button { border: 0; background: none; padding: 5px 12px; border-radius: 7px; color: var(--muted); cursor: pointer; font-size: 13px; }
+  .seg button.on { background: #2a303c; color: var(--text); }
+
+  .hm-scroll { overflow-x: auto; padding-bottom: 4px; }
+  .hm { display: grid; grid-template-columns: 170px auto 76px; gap: 8px 0; align-items: center; min-width: max-content; }
+  .hm-cells { display: grid; grid-template-columns: repeat(var(--n), 30px); justify-items: center; }
+  .hm-name { position: sticky; left: 0; z-index: 1; background: var(--card); padding-right: 14px; display: flex; flex-direction: column; min-width: 0; }
+  .hm-name b { font-weight: 600; font-size: 13px; display: flex; align-items: center; gap: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .hm-name span { color: var(--muted); font-size: 11px; padding-left: 18px; }
+  .hm-name b .nm { color: var(--text); font-size: 13px; padding: 0; overflow: hidden; text-overflow: ellipsis; }
+  .hm-corner { align-self: stretch; }
+  .hm-day { text-align: center; font-size: 10px; color: var(--muted); line-height: 1.25; padding-bottom: 2px; width: 30px; }
+  .hm-day b { display: block; font-size: 12px; color: var(--text); font-weight: 500; }
+  .hm-day.today b { background: var(--text); color: var(--bg); border-radius: 6px; margin: 0 3px; font-weight: 700; }
+  .hm-day.mon { border-left: 1px solid var(--line); }
+  .hm-cell { width: 24px; height: 24px; border-radius: 7px; border: 1px solid #2c323e; background: #1b1f27; cursor: pointer; padding: 0; transition: transform .1s, background .15s; }
+  .hm-cell:hover { border-color: #566074; transform: scale(1.12); }
+  .hm-cell.on { background: var(--c); border-color: transparent; }
+  .hm-cell.today { box-shadow: 0 0 0 2px var(--card), 0 0 0 3.5px rgba(232,234,240,.45); }
+  .hm-rate { text-align: right; line-height: 1.2; white-space: nowrap; padding-left: 10px; }
+  .hm-rate b { display: block; font-size: 14px; }
+  .hm-rate span { color: var(--muted); font-size: 11px; }
+
+  .day-group { margin-bottom: 14px; }
+  .day-head { display: flex; justify-content: space-between; align-items: baseline; padding: 6px 2px 8px; border-bottom: 1px solid var(--line); margin-bottom: 4px; }
+  .log-item { display: flex; align-items: center; gap: 12px; padding: 8px 10px; border-radius: 10px; }
+  .log-item:hover { background: var(--card2); }
+  .time-pill { font-variant-numeric: tabular-nums; font-size: 12px; color: var(--muted); background: var(--card2); border: 1px solid var(--line); padding: 2px 8px; border-radius: 99px; min-width: 62px; text-align: center; }
+  .log-name { font-weight: 600; }
+  .log-note { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .log-acts { margin-left: auto; white-space: nowrap; }
+  @media (hover: hover) { .log-acts { opacity: 0; transition: opacity .15s; } .log-item:hover .log-acts { opacity: 1; } }
+  .show-more { width: 100%; }
+  @media (max-width: 600px) {
+    .hm { grid-template-columns: 112px auto 56px; }
+    .hm-rate span { display: none; }
+    .log-item { gap: 8px; padding: 8px 4px; flex-wrap: wrap; }
+  }
+
+  button:disabled { opacity: .45; cursor: not-allowed; }
+  .plan-seg { margin-bottom: 16px; }
+  .sub-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
+  .total-row td { font-weight: 700; border-top: 1px solid var(--line); border-bottom: 0; }
+  .logged { color: var(--green); font-size: 13px; font-weight: 600; }
+  button.small-btn { padding: 4px 14px; font-size: 13px; }
+  .drop { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 30px 16px; margin: 14px 0 4px; border: 2px dashed var(--line); border-radius: 12px; cursor: pointer; text-align: center; transition: .15s; }
+  .drop:hover, .drop.over { border-color: var(--blue); background: rgba(79,140,255,.07); }
+  .imp-row { display: flex; justify-content: space-between; gap: 16px; padding: 10px 12px; margin-bottom: 8px; border: 1px solid var(--line); border-radius: 10px; background: var(--card2); }
+  .imp-row span { color: var(--muted); text-align: right; }
+  .imp-row.skip { opacity: .55; }
+  .imp-row.warn span { color: var(--orange); }
+  .imp-row.bad span { color: var(--red); }
+  .imp-row.sub { margin-left: 16px; padding: 7px 12px; background: none; }
+  .imp-row.sub span { font-size: 12px; }
+  .imp-group { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; padding: 12px 0; border-top: 1px solid var(--line); }
+  .imp-group .quick { margin: 0; }
+  .imp-errors { margin-top: 12px; padding: 10px 14px; border: 1px solid #5a2a2a; border-radius: 10px; background: #241517; color: #f3b1b1; font-size: 13px; }
+  .imp-errors ul { margin: 6px 0 0; padding-left: 18px; }
+
+  .check.sleepc.on { border-color: #4a3a75; background: #1f1a2e; }
+  .check.sleepc.on .box { background: var(--purple); border-color: var(--purple); color: #140c24; }
+  .check.sleepc:not(.on):hover { border-color: #4a3a75; }
+  div.check { cursor: default; }
+  .linkish { background: none; border: 0; padding: 2px 0; color: var(--muted); font-size: 12px; cursor: pointer; justify-self: start; text-decoration: underline; text-underline-offset: 3px; }
+  .linkish:hover { color: var(--text); }
+  .sleep-acts { display: flex; justify-content: flex-end; gap: 2px; margin-top: -2px; }
+  .ci-label { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .06em; margin: 4px 0 8px; }
+  .ci-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start; }
+  .wo-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+  .wo-chip { display: inline-flex; align-items: center; gap: 8px; padding: 9px 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--card2); cursor: pointer; font-weight: 500; }
+  .wo-chip i { width: 9px; height: 9px; border-radius: 50%; background: var(--c); }
+  .wo-chip:hover { border-color: var(--c); }
+  .wo-chip.on { background: #17251e; border-color: #23573d; color: var(--green); font-weight: 600; }
+  .wo-chip.on i { display: none; }
+  .wgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 420px), 1fr)); gap: 16px; align-items: start; }
+  .wcard { background: var(--card); border: 1px solid var(--line); border-top: 3px solid var(--c); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+  .wcard.done { border-color: #23573d; border-top-color: var(--green); background: linear-gradient(180deg, rgba(53,196,124,.07), var(--card) 35%); }
+  .wcard.rest { border: 1px dashed var(--line); background: transparent; padding: 14px 16px; gap: 6px; }
+  .wc-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+  .wc-title { font-size: 17px; font-weight: 700; }
+  .wc-focus { color: var(--muted); font-size: 13px; margin-top: 2px; }
+  .wc-right { display: flex; align-items: center; gap: 6px; flex: none; }
+  .wc-sets { font-size: 12px; font-weight: 600; color: var(--muted); background: var(--card2); padding: 3px 9px; border-radius: 99px; white-space: nowrap; }
+  .wc-table th { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; padding: 6px 8px; }
+  .wc-table td { padding: 9px 8px; }
+  .wc-table td:first-child { width: 100%; }
+  .wc-table td.n { white-space: nowrap; color: #c3c8d4; font-variant-numeric: tabular-nums; }
+  .wc-foot { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .wc-btn { width: 100%; padding: 12px; border-radius: 12px; border: 1px dashed #3a4150; background: var(--card2); font-weight: 600; cursor: pointer; transition: .15s; }
+  .wc-btn:hover { border-color: var(--c); background: color-mix(in srgb, var(--c) 12%, var(--card2)); }
+  .wc-btn.on { border-style: solid; border-color: #23573d; background: #17251e; color: var(--green); }
+  .ex-acts.show { opacity: 1 !important; }
+  .wo-summary { padding: 14px 16px; }
+  .wo-summary .ministats { margin: 0; gap: 40px; }
+  .cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+  .cal-h { font-size: 11px; color: var(--muted); text-align: center; }
+  .cal-d { min-height: 62px; min-width: 0; border: 1px solid #252a34; border-radius: 10px; padding: 5px; background: #1a1e26; display: flex; flex-direction: column; gap: 3px; }
+  .cal-d.future { opacity: .35; }
+  .cal-d.today { border-color: #566074; }
+  .cal-n { font-size: 11px; color: var(--muted); }
+  .cal-d.today .cal-n { color: var(--text); font-weight: 700; }
+  .cal-s { font-size: 11px; font-weight: 600; padding: 2px 5px; border-radius: 5px; border-left: 3px solid var(--c); background: color-mix(in srgb, var(--c) 20%, transparent); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  @media (max-width: 600px) {
+    .cal-d { min-height: 44px; }
+    .cal-s { font-size: 0; height: 6px; padding: 0; border: 0; background: var(--c); }
+    .wo-summary .ministats { gap: 20px; }
+  }
+  @media (max-width: 760px) { .ci-grid { grid-template-columns: 1fr; gap: 18px; } }
+
+  .field-dial { margin-bottom: 10px; }
+  .field-dial > .lbl { display: block; color: var(--muted); font-size: 12px; margin-bottom: 6px; }
+  .sdial { background: var(--card2); border: 1px solid var(--line); border-radius: 14px; padding: 14px; }
+  .sd-times { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .sd-t { background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; }
+  .sd-t span { display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: 12px; }
+  .sd-t span svg.ic { width: 14px; height: 14px; }
+  .sd-t b { font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .sd-t.bed b, .sd-t.bed svg { color: #c9b3ff; }
+  .sd-t.wake b, .sd-t.wake svg { color: #ffd27a; }
+  .sd-svg { display: block; width: 100%; max-width: 280px; margin: 8px auto 0; touch-action: none; user-select: none; -webkit-user-select: none; }
+  .sd-track { fill: none; stroke: #12151b; stroke-width: 30; }
+  .sd-ticks line { stroke: #3a4150; stroke-width: 1.5; }
+  .sd-ticks line.maj { stroke: #6b7385; stroke-width: 2; }
+  .sd-lbl { fill: var(--muted); font-size: 10px; text-anchor: middle; dominant-baseline: central; }
+  .sd-arc { fill: none; stroke: var(--purple); stroke-width: 30; stroke-linecap: round; opacity: .85; cursor: grab; }
+  .sd-knob { cursor: grab; outline: none; }
+  .sd-knob circle { fill: #20242e; stroke-width: 2.5; transition: r .1s; }
+  .sd-knob[data-k=bed] circle { stroke: #c9b3ff; }
+  .sd-knob[data-k=wake] circle { stroke: #ffd27a; }
+  .sd-knob[data-k=bed] .kic { color: #c9b3ff; }
+  .sd-knob[data-k=wake] .kic { color: #ffd27a; }
+  .sd-knob:hover circle, .sd-knob:focus-visible circle { stroke-width: 4; }
+  .kic { fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
+  .sdial.dragging .sd-knob, .sdial.dragging .sd-arc { cursor: grabbing; }
+  .sd-dur { fill: var(--text); font-size: 24px; font-weight: 700; text-anchor: middle; }
+  .sd-sub { fill: var(--muted); font-size: 11px; text-anchor: middle; }
+  .sd-hint { text-align: center; margin-top: 6px; }
+
+  .kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 16px; }
+  .kpi { background: linear-gradient(155deg, color-mix(in srgb, var(--c) 10%, var(--card)) 0%, var(--card) 60%); border: 1px solid var(--line); border-radius: 16px; padding: 14px 16px 16px; min-width: 0; }
+  .kpi-head { display: flex; align-items: center; gap: 9px; margin-bottom: 14px; }
+  .kpi-ic { width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; flex: none; background: color-mix(in srgb, var(--c) 18%, transparent); color: var(--c); }
+  .kpi-ic svg.ic { width: 17px; height: 17px; }
+  .kpi-label { font-size: 13px; font-weight: 600; color: #c3c8d4; white-space: nowrap; }
+  .kpi-pill { margin-left: auto; font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 99px; background: var(--card2); color: var(--muted); white-space: nowrap; }
+  .kpi-pill.good { background: rgba(53,196,124,.15); color: var(--green); }
+  .kpi-pill.warn { background: rgba(255,159,67,.14); color: var(--orange); }
+  .kpi-body { display: flex; align-items: center; gap: 14px; min-height: 60px; }
+  .kpi-body > div { min-width: 0; }
+  .kpi-big { font-size: 26px; font-weight: 750; line-height: 1.1; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .kpi-big small { font-size: 12.5px; font-weight: 500; color: var(--muted); margin-left: 5px; }
+  .kpi-big.kpi-empty { font-size: 18px; color: var(--muted); }
+  .kpi-sub { color: var(--muted); font-size: 12.5px; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ring { position: relative; width: 60px; height: 60px; flex: none; }
+  .ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+  .ring circle { fill: none; stroke-width: 6; }
+  .ring .bg { stroke: #262b35; }
+  .ring .fg { stroke: var(--c); stroke-linecap: round; transition: stroke-dashoffset .6s ease; }
+  .ring b { position: absolute; inset: 0; display: grid; place-items: center; font-size: 12px; font-weight: 700; }
+  @media (max-width: 480px) {
+    .kpis { gap: 10px; }
+    .kpi { padding: 12px; }
+    .kpi-body { flex-direction: column; align-items: flex-start; gap: 10px; }
+    .kpi-head { margin-bottom: 10px; }
+    .kpi-pill { display: none; }
+    .kpis { grid-template-columns: 1fr 1fr; }
+    .kpis .kpi:nth-child(3) { grid-column: 1 / -1; }
+    .kpis .kpi:nth-child(3) .kpi-body { flex-direction: row; align-items: center; }
+    .kpi-label { font-size: 12px; }
+    .kpi-big { font-size: 22px; }
+    .ring { width: 50px; height: 50px; }
+  }
+
+  .ex-note { color: #7f8799; font-size: 12px; margin-top: 3px; }
+  td.nowrap { white-space: nowrap; }
+
+  .ex-name { font-weight: 600; }
+  .ex-note { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .ex-acts { display: flex; gap: 2px; justify-content: flex-end; }
+  .ex-acts .icon { padding: 5px; display: grid; place-items: center; }
+  .ex-acts .icon svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  @media (hover: hover) { .wc-table tr .ex-acts { opacity: 0; transition: opacity .15s; } .wc-table tr:hover .ex-acts, .ex-acts:focus-within { opacity: 1; } }
+
+  .chart { width: 100%; height: auto; display: block; }
+  .chart .ax { fill: var(--muted); font-size: 11px; }
+  .chart .gl { stroke: #252a34; }
+
+  .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.6); display: grid; place-items: center; z-index: 50; padding: 16px; }
+  .overlay.hidden { display: none; }
+  .modal { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 20px; width: 100%; max-width: 520px; max-height: 90vh; overflow-y: auto; }
+  .modal h3 { font-size: 18px; margin-bottom: 14px; }
+  .field { display: block; margin-bottom: 10px; }
+  .field span { display: block; color: var(--muted); font-size: 12px; margin-bottom: 4px; }
+  input, select { width: 100%; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; }
+  input:focus, select:focus { outline: none; border-color: var(--blue); }
+  input[type=checkbox] { width: auto; accent-color: var(--blue); }
+  .card-head select { width: auto; }
+  .actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+  .chk { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+  .goals { display: grid; grid-template-columns: repeat(3, 1fr) auto; gap: 12px; align-items: end; }
+  .goals .field { margin: 0; }
+
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px); background: #23314d; border: 1px solid #34497a; padding: 10px 16px; border-radius: 10px; opacity: 0; transition: .2s; pointer-events: none; z-index: 60; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  @media (max-width: 900px) {
+    .side { display: none; }
+    .shell { margin-left: 0; padding-bottom: 84px; }
+    .mtop { display: flex; }
+    .bottomnav { display: grid; }
+    .banner { margin: 14px 14px 0; }
+    .toast { bottom: 96px; }
+  }
+  @media (max-width: 860px) {
+    .stats { grid-template-columns: 1fr 1fr; }
+    .grid2 { grid-template-columns: 1fr; gap: 0; }
+    .goals { grid-template-columns: 1fr; }
+    main { padding: 14px; }
+  }
+</style>
+</head>
+<body>
+<aside class="side">
+  <div class="brand"><span class="logo" id="logo1"></span><h1>Gym Tracker</h1></div>
+  <nav id="sidenav"></nav>
+  <div class="side-foot"><span class="dot"></span><span id="sideDate"></span><span class="pill" style="margin-left:auto">Example</span></div>
+</aside>
+<header class="mtop">
+  <div class="brand"><span class="logo" id="logo2"></span><h1>Gym Tracker</h1></div>
+  <button class="icon-btn" id="mSettings" data-act="tab" data-tab="settings" aria-label="Settings"></button>
+</header>
+<div class="shell">
+  <div class="banner">This is a preview with demo data, saved in this browser only. The real app saves to <b>Supabase</b>, so your phone and laptop share the same data. Everything here can be added, edited and deleted.</div>
+  <main id="app"></main>
+</div>
+<nav class="bottomnav" id="bottomnav"></nav>
+<div id="modal" class="overlay hidden"><div class="modal" id="modalBody"></div></div>
+<div id="toast" class="toast"></div>
+
+<script>
+const KEY = 'gymTrackerExample_v1';
+const C = { blue: '#4f8cff', orange: '#ff9f43', green: '#35c47c', purple: '#a77bff' };
+const ICONS = {
+  dashboard: '<rect width="7" height="9" x="3" y="3" rx="1.5"/><rect width="7" height="5" x="14" y="3" rx="1.5"/><rect width="7" height="9" x="14" y="12" rx="1.5"/><rect width="7" height="5" x="3" y="16" rx="1.5"/>',
+  plan: '<rect width="8" height="4" x="8" y="2" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4M12 16h4M8 11h.01M8 16h.01"/>',
+  workouts: '<path d="M6.5 6.5v11M17.5 6.5v11M3.5 9v6M20.5 9v6M6.5 12h11"/>',
+  calories: '<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.07-2.14-.22-4.05 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.15.43-2.29 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>',
+  supplements: '<path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/><path d="m8.5 8.5 7 7"/>',
+  sleep: '<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>',
+  settings: '<path d="M21 4h-7M10 4H3M21 12h-9M8 12H3M21 20h-5M12 20H3M14 2v4M8 10v4M16 18v4"/>',
+};
+const icon = k => `<svg class="ic" viewBox="0 0 24 24">${ICONS[k]}</svg>`;
+// key, label, short label for the phone bar, accent color, sidebar group
+const TABS = [
+  ['dashboard', 'Dashboard', 'Home', '#e8eaf0', 'Overview'],
+  ['plan', 'Plan', 'Plan', '#4f8cff', 'Overview'],
+  ['workouts', 'Workouts', 'Lifts', '#4f8cff', 'Track'],
+  ['calories', 'Calories', 'Food', '#ff9f43', 'Track'],
+  ['supplements', 'Supplements', 'Supps', '#35c47c', 'Track'],
+  ['sleep', 'Sleep', 'Sleep', '#a77bff', 'Track'],
+  ['settings', 'Settings', 'Settings', '#8b93a7', 'App'],
+];
+let tab = TABS.some(t => t[0] === location.hash.slice(1)) ? location.hash.slice(1) : 'dashboard';
+
+// ---------- helpers ----------
+const z = n => String(n).padStart(2, '0');
+const fmt = d => `${d.getFullYear()}-${z(d.getMonth() + 1)}-${z(d.getDate())}`;
+const today = () => fmt(new Date());
+const daysAgo = n => { const d = new Date(); d.setDate(d.getDate() - n); return fmt(d); };
+const lastNDays = n => Array.from({ length: n }, (_, i) => daysAgo(n - 1 - i));
+const nowTime = () => { const d = new Date(); return `${z(d.getHours())}:${z(d.getMinutes())}`; };
+const toTime = m => `${z(Math.floor(m / 60) % 24)}:${z(Math.floor(m % 60))}`;
+const uid = p => p + '_' + Math.random().toString(36).slice(2, 8);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const num = v => Number(v) || 0;
+const sum = (rows, k) => rows.reduce((a, r) => a + num(r[k]), 0);
+const avg = arr => arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : 0;
+const round = (n, d = 1) => Math.round(n * 10 ** d) / 10 ** d;
+const thousands = n => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+const shortDate = s => { const [, m, d] = s.split('-'); return `${Number(d)}.${Number(m)}.`; };
+const uniq = arr => [...new Set(arr.filter(Boolean))].sort();
+const byDateDesc = (a, b) => (b.date + (b.time || '')).localeCompare(a.date + (a.time || ''));
+const rnd = (a, b) => a + Math.random() * (b - a);
+const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+function sleepHours(bed, wake) {
+  if (!bed || !wake) return 0;
+  const [bh, bm] = bed.split(':').map(Number), [wh, wm] = wake.split(':').map(Number);
+  let m = (wh * 60 + wm) - (bh * 60 + bm);
+  if (m <= 0) m += 1440;
+  return round(m / 60, 2);
+}
+
+// ---------- demo data ----------
+function seed() {
+  const ex = (name, sets, reps, rest, notes) => ({ id: uid('e'), name, sets, reps, rest, notes });
+  const day = (name, focus, exercises) => ({ id: uid('p'), name, focus, exercises });
+  const s = {
+    regulars: [
+      { id: uid('r'), name: 'Creatine', dose: 5, unit: 'g', time: 'Morning' },
+      { id: uid('r'), name: 'Whey protein', dose: 1, unit: 'scoop', time: 'Post-workout' },
+      { id: uid('r'), name: 'Vitamin D', dose: 2000, unit: 'IU', time: 'Morning' },
+      { id: uid('r'), name: 'Omega 3', dose: 2, unit: 'caps', time: 'Evening' },
+    ],
+    diet: [
+      { id: uid('d'), meal: 'Breakfast', food: 'Oats with milk and banana', calories: 550, protein: 30, carbs: 85, fat: 12 },
+      { id: uid('d'), meal: 'Lunch', food: 'Chicken, rice and salad', calories: 750, protein: 55, carbs: 85, fat: 18 },
+      { id: uid('d'), meal: 'Snack', food: 'Greek yogurt and nuts', calories: 350, protein: 25, carbs: 20, fat: 18 },
+      { id: uid('d'), meal: 'Dinner', food: 'Salmon with potatoes', calories: 700, protein: 45, carbs: 55, fat: 28 },
+      { id: uid('d'), meal: 'Snack', food: 'Whey shake with milk', calories: 250, protein: 35, carbs: 15, fat: 5 },
+    ],
+    sleepPlan: { bed: '23:00', wake: '07:00' },
+    plan: [
+      day('Upper A', 'Width & upper chest', [ex("Incline Dumbbell Press", 3, '6-8', '120s', "30\u00b0 incline; full stretch on the upper pecs"), ex("Weighted Pull-Up / Lat Pulldown", 4, '8-10', '90-120s', "Drive the elbows down; target the outer lats"), ex("Standing Cable Lateral Raise", 3, '12-15', '60-90s', "Slight forward lean; lead with the elbow"), ex("Low-to-High Cable Fly", 3, '12-15', '60s', "Squeeze the upper chest at the top"), ex("Chest-Supported T-Bar Row", 3, '8-10', '90s', "Upper-back density; neutral spine throughout"), ex("Reverse Pec Deck", 3, '15-20', '45-60s', "Rear delts; light load, no torso english"), ex("Incline Dumbbell Curl", 3, '10-12', '60s', "Seated incline for the long-head stretch")]),
+      day('Lower', 'Lower body & core', [ex("Barbell / Hack Squat", 4, '6-8', '120s', "Control the eccentric; keep depth consistent week to week"), ex("Romanian Deadlift", 3, '8-10', '90-120s', "Hinge at the hips; stretch under load, do not chase depth"), ex("Leg Press / Bulgarian Split Squat", 3, '10-12', '90s', "Quad volume without spinal load"), ex("Seated Leg Curl", 3, '10-12', '60-90s', "Seated, not lying: trains the hamstring at long muscle length"), ex("Seated Leg Extension", 3, '12-15', '60s', "Continuous tension; no lockout pause"), ex("Standing Calf Raise", 4, '10-12', '60s', "Two-second pause at the bottom stretch"), ex("Hanging Leg Raise", 4, '12-15', '60s', "No swing. Posterior pelvic tilt at the top")]),
+      day('Upper B', 'Shoulders & arms', [ex("Overhead Dumbbell Press", 3, '6-8', '120s', "Heavy vertical press; brace the ribs down"), ex("Neutral-Grip Cable Row", 4, '10-12', '90s', "Pull to the lower abdomen; mid-back thickness"), ex("Lean-Away Cable Lateral Raise", 4, '12-15', '60s', "Constant tension on the lateral delt through the full arc"), ex("Flat Dumbbell Press", 3, '8-10', '90s', "Deep stretch; controlled tempo down"), ex("EZ-Bar Skullcrusher", 4, '10-12', '60s', "Elbows pinned; bar behind the head for long-head bias"), ex("Hammer Curl", 3, '10-12', '60s', "Brachialis: widens the arm in profile")]),
+      day('Rest', '', []),
+      day('Push', 'Push aesthetics', [ex("Incline Smith Press", 4, '8-10', '90-120s', "Stable and easy to load progressively. Your main upper-chest driver"), ex("Seated Machine Shoulder Press", 3, '10-12', '90s', "Anterior and side delts; back flat to the pad"), ex("Cable Lateral Raise", 4, '12-15', '60s', "Volume for side-delt width"), ex("Weighted / Bodyweight Dip", 3, '8-10', '90s', "Forward lean for chest bias; stop at shoulder-height depth"), ex("Overhead Rope Extension", 4, '12-15', '60s', "Long head at full stretch"), ex("Seated Calf Raise", 3, '12-15', '45s', "Soleus; bent knee takes the gastroc out")]),
+      day('Pull', 'Pull aesthetics & rear delts', [ex("Single-Arm Lat Pulldown", 4, '10-12', '60-90s', "Unilateral; addresses side-to-side asymmetry"), ex("Meadows Row / Dumbbell Row", 3, '8-10', '90s', "Pull toward the hip, not the chest"), ex("Face Pull", 3, '15-20', '45-60s', "Rear delts and external rotators; high elbows"), ex("Rear Delt Cable Fly", 3, '15-20', '45-60s', "Straight arms, wide arc; let the rear delt do it"), ex("Barbell Shrug", 3, '10-12', '60s', "Two-second hold at the top"), ex("Preacher Curl", 4, '10-12', '60s', "Strict; no momentum out of the bottom"), ex("Cable Crunch", 4, '12-15', '60s', "Load it and progress it like any other lift")]),
+      day('Rest', '', []),
+      day('Lower B', 'Posterior chain. Mass phase only, replaces Push', [ex("Romanian Deadlift", 4, '6-8', '150s', "Heavier than the cutting version: a primary lift, not an accessory"), ex("Barbell Hip Thrust", 3, '8-10', '120s', "Glutes: the largest muscle not trained directly elsewhere"), ex("Seated Leg Curl", 4, '10-12', '90s', "Long-length hamstring work; seated, not lying"), ex("Walking / Reverse Lunge", 3, '10-12', '90s', "Per leg. Quads and glutes under stretch"), ex("Standing Calf Raise", 4, '8-12', '60s', "Heavier and lower-rep than the cutting block"), ex("Weighted Decline Crunch", 3, '10-12', '60s', "Load the abs. In a surplus they grow like anything else")]),
+    ],
+    sessions: [], calories: [], supplements: [], sleep: [],
+  };
+
+  // follow the weekly split (first 7 plan days) for the last four weeks, skipping the odd session
+  for (let i = 27; i >= 1; i--) {
+    const d = s.plan[(27 - i) % 7];
+    if (d.exercises.length && Math.random() > 0.1) s.sessions.push({ id: uid('w'), date: daysAgo(i), dayId: d.id, name: d.name });
+  }
+
+  const MEALS = {
+    Breakfast: [['Oats with milk and banana', 550, 25, 85, 12], ['Eggs and toast', 480, 30, 35, 22]],
+    Lunch: [['Chicken, rice and salad', 750, 55, 85, 18], ['Beef burrito bowl', 820, 48, 90, 26]],
+    Dinner: [['Salmon with potatoes', 700, 45, 55, 28], ['Pasta bolognese', 780, 42, 95, 22]],
+    Snack: [['Greek yogurt and nuts', 350, 25, 20, 18], ['Protein bar', 220, 20, 24, 7]],
+  };
+  for (let i = 29; i >= 0; i--) {
+    const meals = i === 0 ? ['Breakfast', 'Lunch'] : Object.keys(MEALS);
+    meals.forEach(meal => {
+      const f = pick(MEALS[meal]), k = rnd(0.85, 1.2);
+      s.calories.push({ id: uid('c'), date: daysAgo(i), meal, food: f[0], calories: Math.round(f[1] * k), protein: Math.round(f[2] * k), carbs: Math.round(f[3] * k), fat: Math.round(f[4] * k) });
+    });
+  }
+
+  for (let i = 20; i >= 0; i--) {
+    s.regulars.forEach((r, idx) => {
+      if (i === 0 && idx % 2) return;
+      if (i > 0 && Math.random() < 0.12) return;
+      s.supplements.push({ id: uid('s'), date: daysAgo(i), time: idx === 1 ? '18:30' : '08:15', supplement: r.name, dose: r.dose, unit: r.unit, notes: '' });
+    });
+  }
+
+  for (let i = 29; i >= 1; i--) {
+    const bed = toTime((22 * 60 + 40 + rnd(0, 110)) % 1440), wake = toTime(6 * 60 + 30 + rnd(0, 75));
+    s.sleep.push({ id: uid('z'), date: daysAgo(i), bed, wake, hours: sleepHours(bed, wake), notes: '' });
+  }
+  return s;
+}
+
+// ---------- storage (the real app swaps this for Supabase) ----------
+let S = load();
+function load() {
+  try { const raw = localStorage.getItem(KEY); if (raw) return migrate(JSON.parse(raw)); } catch (e) {}
+  const s = seed(); localStorage.setItem(KEY, JSON.stringify(s)); return s;
+}
+// older saves predate the diet and sleep plans
+function migrate(s) {
+  const fresh = seed();
+  if (!s.diet) s.diet = fresh.diet;
+  if (!s.sleepPlan) s.sleepPlan = fresh.sleepPlan;
+  if (!s.sessions) {
+    // per-exercise logs become one finished workout per day
+    const byDate = {};
+    (s.workouts || []).forEach(w => { (byDate[w.date] = byDate[w.date] || []).push(w.exercise); });
+    s.sessions = Object.entries(byDate).map(([date, names]) => {
+      const d = s.plan.find(x => x.exercises.some(e => names.includes(e.name)));
+      return { id: uid('w'), date, dayId: d ? d.id : '', name: d ? d.name : 'Workout' };
+    });
+  }
+  delete s.workouts;
+  delete s.settings;
+  return s;
+}
+// daily targets come straight from the plan
+function goals() {
+  return { calGoal: sum(S.diet, 'calories'), proteinGoal: sum(S.diet, 'protein'), sleepGoal: sleepHours(S.sleepPlan.bed, S.sleepPlan.wake) };
+}
+const ratio = (a, b) => (b ? a / b : null);
+const grams = v => (v === '' || v == null ? '' : `${v} g`);
+function save() { localStorage.setItem(KEY, JSON.stringify(S)); }
+function commit(msg) { save(); render(); if (msg) toast(msg); }
+
+// ---------- section definitions ----------
+const UNITS = ['g', 'mg', 'IU', 'caps', 'scoop', 'ml'];
+const SECTIONS = {
+  calories: {
+    title: 'food entry', prefix: 'c',
+    fields: [
+      { key: 'date', label: 'Date', type: 'date', required: true },
+      { key: 'meal', label: 'Meal', type: 'select', options: ['Breakfast', 'Lunch', 'Dinner', 'Snack'] },
+      { key: 'food', label: 'Food', type: 'text', required: true, list: () => uniq(S.calories.map(c => c.food)) },
+      { key: 'calories', label: 'Calories (kcal)', type: 'number', required: true, min: 0 },
+      { key: 'protein', label: 'Protein (g)', type: 'number', min: 0 },
+      { key: 'carbs', label: 'Carbs (g)', type: 'number', min: 0 },
+      { key: 'fat', label: 'Fat (g)', type: 'number', min: 0 },
+    ],
+    columns: [
+      { label: 'Date', fmt: r => shortDate(r.date) }, { label: 'Meal', key: 'meal' }, { label: 'Food', key: 'food' },
+      { label: 'kcal', key: 'calories' }, { label: 'Protein', fmt: r => r.protein !== '' ? `${r.protein} g` : '' },
+      { label: 'Carbs', fmt: r => r.carbs !== '' ? `${r.carbs} g` : '' }, { label: 'Fat', fmt: r => r.fat !== '' ? `${r.fat} g` : '' },
+    ],
+  },
+  supplements: {
+    title: 'supplement', prefix: 's',
+    fields: [
+      { key: 'date', label: 'Date', type: 'date', required: true },
+      { key: 'time', label: 'Time', type: 'time' },
+      { key: 'supplement', label: 'Supplement', type: 'text', required: true, list: () => uniq([...S.regulars.map(r => r.name), ...S.supplements.map(x => x.supplement)]) },
+      { key: 'dose', label: 'Dose', type: 'number', min: 0 },
+      { key: 'unit', label: 'Unit', type: 'select', options: UNITS },
+      { key: 'notes', label: 'Notes', type: 'text' },
+    ],
+    columns: [
+      { label: 'Date', fmt: r => shortDate(r.date) }, { label: 'Time', key: 'time' }, { label: 'Supplement', key: 'supplement' },
+      { label: 'Dose', fmt: r => `${r.dose} ${r.unit}` }, { label: 'Notes', key: 'notes' },
+    ],
+  },
+  sleep: {
+    title: 'night of sleep', prefix: 'z',
+    fields: [
+      { key: 'date', label: 'Date (the morning you woke up)', type: 'date', required: true },
+      { key: 'times', label: 'Bed and wake time', type: 'sleeptimes', keys: ['bed', 'wake'] },
+      { key: 'notes', label: 'Notes', type: 'text' },
+    ],
+    columns: [
+      { label: 'Date', fmt: r => shortDate(r.date) }, { label: 'Bed', key: 'bed' }, { label: 'Wake', key: 'wake' },
+      { label: 'Hours', fmt: r => `${round(r.hours)} h` }, { label: 'Notes', key: 'notes' },
+    ],
+  },
+};
+const DAY_FIELDS = [
+  { key: 'name', label: 'Name, for example Upper A', type: 'text', required: true },
+  { key: 'focus', label: 'Focus, for example Width & upper chest (optional)', type: 'text' },
+];
+const PLAN_EX_FIELDS = [
+  { key: 'name', label: 'Exercise', type: 'text', required: true, list: () => allExerciseNames() },
+  { key: 'sets', label: 'Sets', type: 'number', required: true, min: 1 },
+  { key: 'reps', label: 'Reps, a number or a range like 8-12', type: 'text', required: true, pattern: '\\d+(\\s*\\D\\s*\\d+)?', hint: 'Use a number like 8 or a range like 8-12' },
+  { key: 'rest', label: 'Rest, for example 90s', type: 'text' },
+  { key: 'notes', label: 'Execution, how to do it', type: 'text' },
+];
+// reps are a single number or a range like "8-12"
+function parseReps(v) {
+  const m = String(v ?? '').trim().match(/^(\d+)(?:\s*[-\u2013\u2014]\s*(\d+))?$/);
+  if (!m) return null;
+  const lo = Number(m[1]), hi = m[2] ? Number(m[2]) : lo;
+  if (lo < 1 || hi < lo) return null;
+  return hi === lo ? lo : `${lo}-${hi}`;
+}
+const SUP_TIMES = ['Morning', 'Midday', 'Evening', 'Before bed', 'Pre-workout', 'Post-workout', 'Any time'];
+// imported files may bring their own units or timings, keep those selectable
+const withExtra = (base, key) => () => [...new Set([...base, ...S.regulars.map(r => r[key]).filter(Boolean)])];
+const REG_FIELDS = [
+  { key: 'name', label: 'Supplement', type: 'text', required: true },
+  { key: 'dose', label: 'Dose', type: 'number', required: true, min: 0 },
+  { key: 'unit', label: 'Unit', type: 'select', options: withExtra(UNITS, 'unit') },
+  { key: 'time', label: 'When', type: 'select', options: withExtra(SUP_TIMES, 'time') },
+];
+const DIET_FIELDS = () => SECTIONS.calories.fields.filter(f => f.key !== 'date');
+const SLEEP_PLAN_FIELDS = [
+  { key: 'times', label: 'Your sleep schedule', type: 'sleeptimes', keys: ['bed', 'wake'] },
+];
+const allExerciseNames = () => uniq(S.plan.flatMap(d => d.exercises.map(e => e.name)));
+
+// ---------- generic UI pieces ----------
+function secHead(title, sub, buttons = '') {
+  return `<div class="sec-head"><div><h2>${title}</h2>${sub ? `<div class="muted">${sub}</div>` : ''}</div><div class="btns">${buttons}</div></div>`;
+}
+const addBtn = (sec, label) => `<button class="primary" data-act="add" data-sec="${sec}">${label}</button>`;
+
+function statCard(label, big, sub, color, ratio) {
+  const bar = ratio == null ? '' : `<div class="bar"><div style="width:${Math.min(100, Math.round(ratio * 100))}%"></div></div>`;
+  return `<div class="stat" style="--c:${color}"><div class="label">${label}</div><div class="big">${big}</div><div class="sub">${sub}</div>${bar}</div>`;
+}
+
+function table(sec, rows) {
+  const c = SECTIONS[sec];
+  if (!rows.length) return '<p class="empty">No entries yet.</p>';
+  return `<div class="tablewrap"><table><thead><tr>${c.columns.map(col => `<th>${col.label}</th>`).join('')}<th></th></tr></thead><tbody>${
+    rows.map(r => `<tr>${c.columns.map(col => `<td>${esc(col.fmt ? col.fmt(r) : r[col.key])}</td>`).join('')}
+      <td class="rowact"><button class="icon" data-act="edit" data-sec="${sec}" data-id="${r.id}">Edit</button><button class="icon danger" data-act="del" data-sec="${sec}" data-id="${r.id}">Delete</button></td></tr>`).join('')
+  }</tbody></table></div>`;
+}
+
+const optsOf = f => (typeof f.options === 'function' ? f.options() : f.options);
+function fieldHtml(f, v, values = {}) {
+  if (f.type === 'sleeptimes') return `<div class="field-dial"><span class="lbl">${f.label}</span>${sleepDialHtml(values.bed || S.sleepPlan.bed, values.wake || S.sleepPlan.wake)}</div>`;
+  v = v ?? '';
+  let input;
+  if (f.type === 'select') {
+    input = `<select name="${f.key}">${optsOf(f).map(o => `<option ${String(o) === String(v) ? 'selected' : ''}>${esc(o)}</option>`).join('')}</select>`;
+  } else {
+    const listId = f.list ? `dl_${f.key}` : '';
+    input = `<input name="${f.key}" type="${f.type}" value="${esc(v)}" ${f.required ? 'required' : ''} ${f.type === 'number' ? 'step="any"' : ''}
+      ${f.pattern ? `pattern="${f.pattern}" title="${esc(f.hint || '')}"` : ''} ${f.min != null ? `min="${f.min}"` : ''} ${f.max != null ? `max="${f.max}"` : ''} ${listId ? `list="${listId}" autocomplete="off"` : ''}>`
+      + (f.list ? `<datalist id="${listId}">${f.list().map(o => `<option value="${esc(o)}">`).join('')}</datalist>` : '');
+  }
+  return `<label class="field"><span>${f.label}</span>${input}</label>`;
+}
+
+function openForm(title, fields, values, onSave) {
+  const form = showModal(`<h3>${title}</h3><form id="mform">${fields.map(f => fieldHtml(f, values[f.key], values)).join('')}
+    <div class="actions"><button type="button" class="ghost" data-act="close">Cancel</button><button class="primary">Save</button></div></form>`);
+  form.onsubmit = e => {
+    e.preventDefault();
+    const out = {};
+    fields.forEach(f => {
+      if (f.keys) { f.keys.forEach(k => { out[k] = form.elements[k].value; }); return; }
+      let v = form.elements[f.key].value;
+      if (f.type === 'number' || (f.type === 'select' && typeof optsOf(f)[0] === 'number')) v = v === '' ? '' : Number(v);
+      out[f.key] = typeof v === 'string' ? v.trim() : v;
+    });
+    closeModal();
+    onSave(out);
+  };
+}
+
+function showModal(html) {
+  document.getElementById('modalBody').innerHTML = html;
+  document.getElementById('modal').classList.remove('hidden');
+  const first = document.querySelector('#modalBody input, #modalBody select');
+  if (first) first.focus();
+  return document.getElementById('mform');
+}
+function closeModal() { document.getElementById('modal').classList.add('hidden'); }
+
+let toastTimer;
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 1800);
+}
+
+// ---------- charts (plain SVG, the real app can use Chart.js) ----------
+function niceMax(v) {
+  if (v <= 0) return 1;
+  const p = 10 ** Math.floor(Math.log10(v * 1.05)), n = v * 1.05 / p;
+  return [1, 1.2, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10].find(s => s >= n) * p;
+}
+function chartBase(data, goal, wide) {
+  const W = wide ? 1200 : 640, H = wide ? 260 : 220, P = { l: 46, r: 14, t: 14, b: 30 };
+  const iw = W - P.l - P.r, ih = H - P.t - P.b;
+  const max = niceMax(Math.max(goal || 0, ...data.map(d => d.value || 0)));
+  const y = v => P.t + ih - (v / max) * ih, bw = iw / Math.max(data.length, 1);
+  let s = '';
+  for (let i = 0; i <= 4; i++) {
+    const v = max * i / 4;
+    s += `<line class="gl" x1="${P.l}" x2="${W - P.r}" y1="${y(v)}" y2="${y(v)}"/><text class="ax" x="${P.l - 8}" y="${y(v) + 4}" text-anchor="end">${round(v)}</text>`;
+  }
+  const step = Math.ceil(data.length / 10);
+  data.forEach((d, i) => { if (i % step === 0) s += `<text class="ax" x="${P.l + i * bw + bw / 2}" y="${H - 10}" text-anchor="middle">${esc(d.label)}</text>`; });
+  const goalLine = goal ? `<line x1="${P.l}" x2="${W - P.r}" y1="${y(goal)}" y2="${y(goal)}" stroke="#e8eaf0" stroke-opacity=".45" stroke-dasharray="5 5"/><text class="ax" x="${W - P.r}" y="${y(goal) - 6}" text-anchor="end">goal ${goal}</text>` : '';
+  return { W, H, P, ih, y, bw, s, goalLine };
+}
+function barChart(data, { goal, color = C.blue, unit = '', wide = false } = {}) {
+  if (!data.length) return '<p class="empty">No data yet.</p>';
+  const { W, H, P, ih, y, bw, s, goalLine } = chartBase(data, goal, wide);
+  const bars = data.map((d, i) => {
+    const v = d.value || 0, top = y(v);
+    return `<rect x="${P.l + i * bw + bw * 0.18}" y="${top}" width="${bw * 0.64}" height="${Math.max(P.t + ih - top, 0)}" rx="3" fill="${color}"><title>${esc(d.label)}: ${thousands(v)}${unit}</title></rect>`;
+  }).join('');
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}">${s}${bars}${goalLine}</svg>`;
+}
+function lineChart(data, { goal, color = C.blue, unit = '', wide = false } = {}) {
+  const pts = data.map((d, i) => ({ ...d, i })).filter(d => d.value != null);
+  if (!pts.length) return '<p class="empty">No data yet.</p>';
+  const { W, H, P, y, bw, s, goalLine } = chartBase(data, goal, wide);
+  const x = i => P.l + i * bw + bw / 2;
+  const line = `<polyline fill="none" stroke="${color}" stroke-width="2.5" stroke-linejoin="round" points="${pts.map(p => `${x(p.i)},${y(p.value)}`).join(' ')}"/>`;
+  const dots = pts.map(p => `<circle cx="${x(p.i)}" cy="${y(p.value)}" r="4" fill="${color}"><title>${esc(p.label)}: ${round(p.value)}${unit}</title></circle>`).join('');
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}">${s}${goalLine}${line}${dots}</svg>`;
+}
+
+// ---------- supplements helpers ----------
+function supChecklist() {
+  if (!S.regulars.length) return '<p class="empty">Add your regular supplements in Plan, Supplements.</p>';
+  return S.regulars.map(r => {
+    const taken = S.supplements.some(x => x.date === today() && x.supplement === r.name);
+    return `<button class="check ${taken ? 'on' : ''}" data-act="sup-toggle" data-name="${esc(r.name)}"><span class="box">${taken ? '✓' : ''}</span><span>${esc(r.name)}</span><span class="muted small">${esc(r.dose)} ${esc(r.unit)}${r.time ? ` · ${esc(r.time)}` : ''}</span></button>`;
+  }).join('');
+}
+function streak(name) {
+  const days = new Set(S.supplements.filter(x => x.supplement === name).map(x => x.date));
+  let n = 0, i = days.has(today()) ? 0 : 1;
+  while (days.has(daysAgo(i))) { n++; i++; }
+  return n;
+}
+function toggleSup(name, date = today()) {
+  const taken = S.supplements.some(x => x.date === date && x.supplement === name);
+  if (taken) {
+    S.supplements = S.supplements.filter(x => !(x.date === date && x.supplement === name));
+  } else {
+    const src = S.regulars.find(x => x.name === name) || S.supplements.filter(x => x.supplement === name).sort(byDateDesc)[0] || { dose: '', unit: 'g' };
+    S.supplements.push({ id: uid('s'), date, time: date === today() ? nowTime() : '', supplement: name, dose: src.dose, unit: src.unit, notes: '' });
+  }
+  const when = date === today() ? '' : ` on ${dayLabel(date)}`;
+  commit(taken ? `${name} unchecked${when}` : `${name} taken${when}`);
+}
+
+function sleepCheck() {
+  const night = S.sleep.find(x => x.date === today()), p = S.sleepPlan;
+  if (!night) {
+    return `<button class="check sleepc" data-act="sleep-check"><span class="box"></span><span>Slept as planned</span><span class="muted small">${esc(p.bed)} to ${esc(p.wake)}</span></button>
+      <button class="linkish" data-act="sleep-other">Different times?</button>`;
+  }
+  return `<div class="check sleepc on"><span class="box">✓</span><span>Slept ${round(night.hours)} h</span><span class="muted small">${esc(night.bed)} to ${esc(night.wake)}</span></div>
+    <div class="sleep-acts"><button class="icon" data-act="edit" data-sec="sleep" data-id="${night.id}">Edit</button><button class="icon danger" data-act="sleep-undo">Undo</button></div>`;
+}
+
+// ---------- sleep dial: bedtime and wake-up picker on a 24 hour clock ----------
+const DIAL = { c: 120, r: 90 };
+const SUN = '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>';
+const toMin = t => { const [h, m] = String(t).split(':').map(Number); return (h || 0) * 60 + (m || 0); };
+const dialPt = (min, r = DIAL.r) => { const a = min / 1440 * 2 * Math.PI - Math.PI / 2; return [DIAL.c + r * Math.cos(a), DIAL.c + r * Math.sin(a)]; };
+const asleep = (b, w) => (w - b + 1440) % 1440;
+const fmtDur = m => `${Math.floor(m / 60)}h ${z(m % 60)}m`;
+function dialArc(b, w) {
+  const d = asleep(b, w);
+  if (!d) return '';
+  const [x1, y1] = dialPt(b), [x2, y2] = dialPt(w);
+  return `M ${x1} ${y1} A ${DIAL.r} ${DIAL.r} 0 ${d > 720 ? 1 : 0} 1 ${x2} ${y2}`;
+}
+function sleepDialHtml(bed, wake) {
+  const b = toMin(bed), w = toMin(wake);
+  const ticks = Array.from({ length: 24 }, (_, h) => {
+    const [x1, y1] = dialPt(h * 60, 72), [x2, y2] = dialPt(h * 60, h % 6 ? 68 : 64);
+    return `<line class="${h % 6 ? '' : 'maj'}" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/>`;
+  }).join('');
+  const labels = [0, 3, 6, 9, 12, 15, 18, 21].map(h => { const [x, y] = dialPt(h * 60, 55); return `<text class="sd-lbl" x="${x}" y="${y}">${z(h)}</text>`; }).join('');
+  const knob = (k, m, label, paths) => {
+    const [x, y] = dialPt(m);
+    return `<g class="sd-knob" data-k="${k}" tabindex="0" role="slider" aria-label="${label}" transform="translate(${x} ${y})"><circle r="16"/><svg class="kic" x="-9" y="-9" width="18" height="18" viewBox="0 0 24 24">${paths}</svg></g>`;
+  };
+  return `<div class="sdial">
+    <div class="sd-times">
+      <div class="sd-t bed"><span>${icon('sleep')}Bedtime</span><b data-out="bed">${toTime(b)}</b></div>
+      <div class="sd-t wake"><span><svg class="ic" viewBox="0 0 24 24">${SUN}</svg>Wake up</span><b data-out="wake">${toTime(w)}</b></div>
+    </div>
+    <svg class="sd-svg" viewBox="0 0 240 240">
+      <circle class="sd-track" cx="120" cy="120" r="${DIAL.r}"/>
+      <g class="sd-ticks">${ticks}</g>${labels}
+      <path class="sd-arc" d="${dialArc(b, w)}"/>
+      ${knob('bed', b, 'Bedtime', ICONS.sleep)}${knob('wake', w, 'Wake up', SUN)}
+      <text class="sd-dur" x="120" y="116">${fmtDur(asleep(b, w))}</text>
+      <text class="sd-sub" x="120" y="137">time asleep</text>
+    </svg>
+    <input type="hidden" name="bed" value="${toTime(b)}"><input type="hidden" name="wake" value="${toTime(w)}">
+    <div class="muted small sd-hint">Drag the moon and the sun. Drag the arc to move both.</div>
+  </div>`;
+}
+function setDial(dial, bedMin, wakeMin) {
+  const snap = m => ((Math.round(m / 5) * 5) % 1440 + 1440) % 1440;
+  const b = snap(bedMin), w = snap(wakeMin);
+  for (const [k, m] of [['bed', b], ['wake', w]]) {
+    dial.querySelector(`[name=${k}]`).value = toTime(m);
+    dial.querySelector(`[data-out=${k}]`).textContent = toTime(m);
+    const [x, y] = dialPt(m);
+    dial.querySelector(`.sd-knob[data-k=${k}]`).setAttribute('transform', `translate(${x} ${y})`);
+  }
+  dial.querySelector('.sd-arc').setAttribute('d', dialArc(b, w));
+  dial.querySelector('.sd-dur').textContent = fmtDur(asleep(b, w));
+}
+function pointerMin(svg, e) {
+  const r = svg.getBoundingClientRect();
+  const x = (e.clientX - r.left) / r.width * 240 - DIAL.c, y = (e.clientY - r.top) / r.height * 240 - DIAL.c;
+  let a = Math.atan2(y, x) + Math.PI / 2;
+  if (a < 0) a += 2 * Math.PI;
+  return a / (2 * Math.PI) * 1440;
+}
+const dialTimes = dial => [toMin(dial.querySelector('[name=bed]').value), toMin(dial.querySelector('[name=wake]').value)];
+let dialDrag = null, justDragged = false;
+
+// ---------- views ----------
+const EGG = '<path d="M12 22c6.23-.05 7.87-5.57 7.5-10-.36-4.34-3.95-9.96-7.5-10-3.55.04-7.14 5.66-7.5 10-.37 4.43 1.27 9.95 7.5 10z"/>';
+function ring(frac, text) {
+  const c = 2 * Math.PI * 24, p = Math.max(0, Math.min(1, frac || 0));
+  return `<div class="ring"><svg viewBox="0 0 60 60"><circle class="bg" cx="30" cy="30" r="24"/><circle class="fg" cx="30" cy="30" r="24" stroke-dasharray="${c}" stroke-dashoffset="${c * (1 - p)}"/></svg><b>${text}</b></div>`;
+}
+function kpi(color, iconSvg, label, pill, body, pillClass = '') {
+  return `<div class="kpi" style="--c:${color}">
+    <div class="kpi-head"><span class="kpi-ic">${iconSvg}</span><span class="kpi-label">${label}</span>${pill ? `<span class="kpi-pill ${pillClass}">${pill}</span>` : ''}</div>
+    <div class="kpi-body">${body}</div></div>`;
+}
+function dashKpis(kcal, prot, g) {
+  const pct = (a, b) => (b ? Math.round(a / b * 100) : 0);
+  const night = S.sleep.find(x => x.date === today());
+  const left = (goal, have, unit) => (have >= goal ? 'Goal reached' : `${thousands(goal - have)}${unit} to go`);
+  const sleepMin = night ? Math.round(num(night.hours) * 60) : 0, short = Math.round(g.sleepGoal * 60) - sleepMin;
+
+  const cal = kpi(C.orange, icon('calories'), 'Calories', `${pct(kcal, g.calGoal)}%`,
+    `${ring(ratio(kcal, g.calGoal), `${pct(kcal, g.calGoal)}%`)}<div><div class="kpi-big">${thousands(kcal)}<small>kcal</small></div><div class="kpi-sub">of ${thousands(g.calGoal)}, ${left(g.calGoal, kcal, '')}</div></div>`,
+    kcal >= g.calGoal && g.calGoal ? 'good' : '');
+  const pro = kpi('#ff6b8b', `<svg class="ic" viewBox="0 0 24 24">${EGG}</svg>`, 'Protein', `${pct(prot, g.proteinGoal)}%`,
+    `${ring(ratio(prot, g.proteinGoal), `${pct(prot, g.proteinGoal)}%`)}<div><div class="kpi-big">${prot}<small>g</small></div><div class="kpi-sub">of ${g.proteinGoal} g, ${left(g.proteinGoal, prot, ' g')}</div></div>`,
+    prot >= g.proteinGoal && g.proteinGoal ? 'good' : '');
+  const slp = night
+    ? kpi(C.purple, icon('sleep'), 'Last night', short <= 0 ? 'On goal' : `${fmtDur(short)} short`,
+      `${ring(ratio(num(night.hours), g.sleepGoal), `${pct(num(night.hours), g.sleepGoal)}%`)}<div><div class="kpi-big">${fmtDur(sleepMin).replace(' 00m', '')}</div><div class="kpi-sub">${esc(night.bed)} to ${esc(night.wake)}</div></div>`,
+      short <= 0 ? 'good' : 'warn')
+    : kpi(C.purple, icon('sleep'), 'Last night', 'Not logged',
+      `${ring(0, '?')}<div><div class="kpi-big kpi-empty">No entry</div><button class="linkish" data-act="sleep-check">Slept as planned</button></div>`);
+  return `<div class="kpis">${cal}${pro}${slp}</div>`;
+}
+
+function renderDashboard() {
+  const t = today(), g = goals();
+  const cals = S.calories.filter(c => c.date === t);
+  const kcal = sum(cals, 'calories'), prot = sum(cals, 'protein');
+  const dateLabel = new Date().toDateString();
+
+  return secHead('Today', dateLabel) + `
+  ${dashKpis(kcal, prot, g)}
+  <div class="card"><h3>Daily check-in</h3>
+    <div class="ci-grid">
+      <div><div class="ci-label">Last night</div><div class="checks">${sleepCheck()}</div>
+        <div class="ci-label" style="margin-top:18px">Workout</div>${workoutCheck()}</div>
+      <div><div class="ci-label">Supplements</div><div class="checks">${supChecklist()}</div></div>
+    </div>
+  </div>`;
+}
+
+let planTab = 'workout';
+const PLAN_TABS = [['workout', 'Workout'], ['diet', 'Diet'], ['supplements', 'Supplements'], ['sleep', 'Sleep']];
+function renderPlan() {
+  const seg = PLAN_TABS.map(([k, l]) => `<button class="${planTab === k ? 'on' : ''}" data-act="plan-tab" data-k="${k}">${l}</button>`).join('');
+  const body = { workout: planWorkout, diet: planDiet, supplements: planSupplements, sleep: planSleep }[planTab]();
+  return secHead('Your plan', planTab === 'workout' ? 'Your training days. Edit anything here, or import them from an Excel file.' : 'Diet, supplements and sleep. Edit anything here, or import all three from one Excel file.',
+    importBtns(planTab === 'workout' ? 'workout' : 'other'))
+    + `<div class="seg plan-seg">${seg}</div>${body}`;
+}
+
+function planDiet() {
+  const g = goals();
+  const rows = S.diet.map(m => `<tr><td>${esc(m.meal)}</td><td>${esc(m.food)}</td><td>${esc(m.calories)}</td><td>${grams(m.protein)}</td><td>${grams(m.carbs)}</td><td>${grams(m.fat)}</td>
+    <td class="rowact"><button class="icon" data-act="diet-edit" data-id="${m.id}">Edit</button><button class="icon danger" data-act="diet-del" data-id="${m.id}">Delete</button></td></tr>`).join('');
+  return `<div class="card"><div class="card-head"><div><h3>Daily meal plan</h3><div class="muted small">Your daily calorie and protein goals are the totals of this plan.</div></div><button class="ghost" data-act="diet-add">+ Meal</button></div>
+    ${S.diet.length ? `<div class="tablewrap"><table><thead><tr><th>Meal</th><th>Food</th><th>kcal</th><th>Protein</th><th>Carbs</th><th>Fat</th><th></th></tr></thead><tbody>${rows}
+      <tr class="total-row"><td colspan="2">Daily total</td><td>${thousands(g.calGoal)}</td><td>${g.proteinGoal} g</td><td>${sum(S.diet, 'carbs')} g</td><td>${sum(S.diet, 'fat')} g</td><td></td></tr></tbody></table></div>`
+      : '<p class="empty">No meals planned yet.</p>'}</div>`;
+}
+
+function planSupplements() {
+  return `<div class="card"><div class="card-head"><div><h3>Daily supplements</h3><div class="muted small">These become your daily checklist on the Dashboard and Supplements page.</div></div><button class="ghost" data-act="reg-add">+ Supplement</button></div>
+    ${S.regulars.length ? `<table><thead><tr><th>Supplement</th><th>Dose</th><th>When</th><th></th></tr></thead><tbody>${S.regulars.map(r => `
+      <tr><td><i class="cdot" style="background:${supColor(r.name)};display:inline-block;margin-right:8px"></i>${esc(r.name)}</td><td>${esc(r.dose)} ${esc(r.unit)}</td><td>${esc(r.time)}</td><td class="rowact">
+        <button class="icon" data-act="reg-edit" data-id="${r.id}">Edit</button><button class="icon danger" data-act="reg-del" data-id="${r.id}">Delete</button></td></tr>`).join('')}</tbody></table>`
+      : '<p class="empty">No supplements planned yet.</p>'}</div>`;
+}
+
+function planSleep() {
+  const p = S.sleepPlan;
+  return `<div class="card"><div class="card-head"><div><h3>Sleep schedule</h3><div class="muted small">Your sleep goal is the time between these two.</div></div><button class="ghost" data-act="sleep-plan-edit">Edit</button></div>
+    <div class="ministats"><div><b>${esc(p.bed)}</b><span>Bed time</span></div><div><b>${esc(p.wake)}</b><span>Wake time</span></div><div><b>${round(goals().sleepGoal)} h</b><span>Sleep goal</span></div></div></div>`;
+}
+
+// ---------- workouts: the plan renders as cards, tap one when it's done ----------
+const isRestDay = d => !d.exercises.length;
+const trainingDays = () => S.plan.filter(d => !isRestDay(d));
+const daySets = d => d.exercises.reduce((a, e) => a + num(e.sets), 0);
+const dayColor = id => { const i = trainingDays().findIndex(d => d.id === id); return i < 0 ? '#8b93a7' : SUP_COLORS[(i + 1) % SUP_COLORS.length]; };
+const doneOn = (dayId, date) => S.sessions.find(x => x.dayId === dayId && x.date === date);
+const lastDone = d => S.sessions.filter(x => x.dayId === d.id).sort(byDateDesc)[0]?.date;
+const ICON_EDIT = '<svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>';
+const ICON_DEL = '<svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>';
+const ICON_UP = '<svg viewBox="0 0 24 24"><path d="m18 15-6-6-6 6"/></svg>';
+
+function toggleWorkout(dayId, date = today()) {
+  const day = S.plan.find(d => d.id === dayId), done = doneOn(dayId, date);
+  if (done) S.sessions = S.sessions.filter(x => x !== done);
+  else S.sessions.push({ id: uid('w'), date, dayId, name: day.name });
+  const when = date === today() ? '' : ` on ${dayLabel(date)}`;
+  commit(done ? `${day.name} unmarked${when}` : `${day.name} done${when}`);
+}
+
+// mode "track" has the done button, mode "edit" has the editing controls
+function workoutCard(day, mode) {
+  const edit = mode === 'edit';
+  const dayActs = edit ? `<div class="ex-acts show"><button class="icon" title="Edit day" aria-label="Edit day" data-act="plan-rename" data-day="${day.id}">${ICON_EDIT}</button><button class="icon danger" title="Delete day" aria-label="Delete day" data-act="plan-del-day" data-day="${day.id}">${ICON_DEL}</button></div>` : '';
+  const head = `<div class="wc-head"><div><div class="wc-title">${esc(day.name)}</div>${day.focus ? `<div class="wc-focus">${esc(day.focus)}</div>` : ''}</div>
+    <div class="wc-right">${isRestDay(day) ? '' : `<span class="wc-sets">${daySets(day)} sets</span>`}${dayActs}</div></div>`;
+  if (isRestDay(day)) {
+    return `<div class="wcard rest">${head}<div class="muted small">${edit ? 'Rest day. Add an exercise to turn it into a training day.' : 'Rest day'}</div>
+      ${edit ? `<div><button class="ghost" data-act="plan-add-ex" data-day="${day.id}">+ Exercise</button></div>` : ''}</div>`;
+  }
+  const done = doneOn(day.id, today()), last = lastDone(day);
+  const rows = day.exercises.map((e, i) => `<tr>
+      <td><div class="ex-name">${esc(e.name)}</div>${e.notes ? `<div class="ex-note">${esc(e.notes)}</div>` : ''}</td>
+      <td class="n">${esc(e.sets)}</td><td class="n">${esc(e.reps)}</td><td class="n">${esc(e.rest || '')}</td>
+      ${edit ? `<td><div class="ex-acts">${i > 0 ? `<button class="icon" title="Move up" aria-label="Move up" data-act="plan-up" data-day="${day.id}" data-i="${i}">${ICON_UP}</button>` : ''}<button class="icon" title="Edit" aria-label="Edit" data-act="plan-edit-ex" data-day="${day.id}" data-i="${i}">${ICON_EDIT}</button><button class="icon danger" title="Delete" aria-label="Delete" data-act="plan-del-ex" data-day="${day.id}" data-i="${i}">${ICON_DEL}</button></div></td>` : ''}
+    </tr>`).join('');
+  const foot = edit
+    ? `<div><button class="ghost" data-act="plan-add-ex" data-day="${day.id}">+ Exercise</button></div>`
+    : `<div class="wc-foot"><button class="wc-btn ${done ? 'on' : ''}" data-act="wo-toggle" data-day="${day.id}">${done ? '✓ Done today, tap to undo' : 'Mark as done'}</button>
+        <span class="muted small">${last ? `Last done ${dayLabel(last)}` : 'Not done yet'}</span></div>`;
+  return `<div class="wcard ${done && !edit ? 'done' : ''}" style="--c:${dayColor(day.id)}">${head}
+    <div class="tablewrap"><table class="wc-table"><thead><tr><th>Exercise</th><th>Sets</th><th>Reps</th><th>Rest</th>${edit ? '<th></th>' : ''}</tr></thead><tbody>${rows}</tbody></table></div>${foot}</div>`;
+}
+
+function planWorkout() {
+  return `<div class="sub-head"><span class="muted">Edit your workouts here. A day without exercises is a rest day.</span><button class="ghost" data-act="plan-add-day">+ Add day</button></div>`
+    + `<div class="wgrid">${S.plan.map(d => workoutCard(d, 'edit')).join('') || '<p class="empty">No plan yet. Import one, or add your first day.</p>'}</div>`;
+}
+
+function workoutCheck() {
+  if (!trainingDays().length) return '<p class="empty">Import or add a workout plan first.</p>';
+  return `<div class="wo-chips">${trainingDays().map(d => {
+    const on = doneOn(d.id, today());
+    return `<button class="wo-chip ${on ? 'on' : ''}" style="--c:${dayColor(d.id)}" data-act="wo-toggle" data-day="${d.id}"><i></i>${on ? '✓ ' : ''}${esc(d.name)}</button>`;
+  }).join('')}</div><div class="muted small">Tap the workout you finished today. Tap again to undo.</div>`;
+}
+
+function workoutCalendar() {
+  const t = parseDay(today()), monday = (t.getDay() + 6) % 7;
+  const days = Array.from({ length: 28 }, (_, i) => daysAgo(monday + 21 - i));
+  const head = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(d => `<div class="cal-h">${d}</div>`).join('');
+  const cells = days.map(d => {
+    const items = S.sessions.filter(x => x.date === d);
+    return `<div class="cal-d ${d > today() ? 'future' : ''} ${d === today() ? 'today' : ''}"><span class="cal-n">${parseDay(d).getDate()}</span>
+      ${items.map(x => `<span class="cal-s" style="--c:${dayColor(x.dayId)}" title="${esc(x.name)}">${esc(x.name)}</span>`).join('')}</div>`;
+  }).join('');
+  return `<div class="cal">${head}${cells}</div>`;
+}
+
+function renderWorkouts() {
+  const week = S.sessions.filter(x => x.date >= daysAgo(6)).length, month = S.sessions.filter(x => x.date >= daysAgo(29)).length;
+  const last = S.sessions.slice().sort(byDateDesc)[0];
+  const history = S.sessions.slice().sort(byDateDesc).slice(0, 12).map(x => `<div class="log-item">
+      <span class="time-pill">${dayLabel(x.date)}</span><i class="cdot" style="background:${dayColor(x.dayId)}"></i><span class="log-name">${esc(x.name)}</span>
+      <span class="log-acts"><button class="icon danger" data-act="wo-del" data-id="${x.id}">Delete</button></span></div>`).join('');
+  return secHead('Workouts', 'Your plan as cards. Tap a workout when you finish it.', '<button class="ghost" data-act="wo-past">+ Past workout</button><button class="ghost" data-act="tab" data-tab="plan">Edit plan</button>') + `
+    <div class="card wo-summary"><div class="ministats">
+      <div><b>${week}</b><span>Workouts, last 7 days</span></div>
+      <div><b>${month}</b><span>Workouts, last 30 days</span></div>
+      <div><b>${last ? esc(last.name) : '-'}</b><span>${last ? `Last workout, ${dayLabel(last.date)}` : 'No workouts yet'}</span></div>
+    </div></div>
+    <div class="wgrid">${S.plan.map(d => workoutCard(d, 'track')).join('') || '<p class="empty">No plan yet. Import your workout plan in Plan.</p>'}</div>
+    <div class="grid2" style="margin-top:16px">
+      <div class="card"><h3>Last 4 weeks</h3>${workoutCalendar()}</div>
+      <div class="card"><h3>Finished workouts</h3>${history || '<p class="empty">Nothing yet. Tap Mark as done on a card when you finish a workout.</p>'}</div>
+    </div>`;
+}
+
+function mealPlanCard() {
+  if (!S.diet.length) return '';
+  const t = today(), logged = m => S.calories.some(c => c.date === t && c.food === m.food && c.meal === m.meal);
+  return `<div class="card"><div class="card-head"><div><h3>Today's meal plan</h3><div class="muted small">Tap Log when you eat a planned meal.</div></div></div>
+    ${S.diet.map(m => `<div class="log-item">
+      <span class="time-pill">${esc(m.meal)}</span><span class="log-name">${esc(m.food)}</span><span class="muted">${thousands(num(m.calories))} kcal${m.protein !== '' ? `, ${esc(m.protein)} g protein` : ''}</span>
+      <span class="log-acts" style="opacity:1">${logged(m) ? '<span class="logged">✓ Logged</span>' : `<button class="ghost small-btn" data-act="diet-log" data-id="${m.id}">Log</button>`}</span>
+    </div>`).join('')}</div>`;
+}
+
+function renderCalories() {
+  const t = today(), g = goals(), rows = S.calories.filter(c => c.date === t);
+  const kcal = sum(rows, 'calories');
+  return secHead('Calories', 'What you ate today.', addBtn('calories', '+ Add food')) + `
+    <div class="stats">
+      ${statCard('Today', thousands(kcal), `of ${thousands(g.calGoal)} kcal, ${thousands(Math.max(g.calGoal - kcal, 0))} left`, C.orange, ratio(kcal, g.calGoal))}
+      ${statCard('Protein today', `${sum(rows, 'protein')} g`, `of ${g.proteinGoal} g`, C.orange, ratio(sum(rows, 'protein'), g.proteinGoal))}
+      ${statCard('Carbs / fat today', `${sum(rows, 'carbs')} / ${sum(rows, 'fat')}`, 'grams', C.orange, null)}
+      ${statCard('7 day average', thousands(avg(lastNDays(7).map(d => sum(S.calories.filter(c => c.date === d), 'calories')))), 'kcal per day', C.orange, null)}
+    </div>
+    ${mealPlanCard()}`;
+}
+
+const SUP_COLORS = ['#35c47c', '#4f8cff', '#ff9f43', '#a77bff', '#ff6b8b', '#2fc6c6', '#f5c542'];
+const WD = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const MO = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const parseDay = d => new Date(d + 'T00:00');
+let supRange = 28, supLogDays = 7;
+
+function supColor(name) {
+  const i = S.regulars.findIndex(r => r.name === name);
+  if (i >= 0) return SUP_COLORS[i % SUP_COLORS.length];
+  let h = 0;
+  for (const ch of name) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  return SUP_COLORS[h % SUP_COLORS.length];
+}
+function dayLabel(d) {
+  if (d === today()) return 'Today';
+  if (d === daysAgo(1)) return 'Yesterday';
+  const dt = parseDay(d);
+  return `${WD[dt.getDay()]}, ${dt.getDate()} ${MO[dt.getMonth()]}`;
+}
+
+function supHeatmap() {
+  const days = lastNDays(supRange), regularNames = S.regulars.map(r => r.name);
+  const extra = uniq(S.supplements.filter(x => x.date >= days[0] && !regularNames.includes(x.supplement)).map(x => x.supplement));
+  const rows = [...regularNames, ...extra];
+  if (!rows.length) return '<p class="empty">Nothing logged yet.</p>';
+  const taken = new Set(S.supplements.map(x => x.date + '|' + x.supplement));
+  const head = days.map(d => {
+    const dt = parseDay(d);
+    return `<div class="hm-day ${d === today() ? 'today' : ''} ${dt.getDay() === 1 ? 'mon' : ''}"><span>${WD[dt.getDay()].slice(0, 2)}</span><b>${dt.getDate()}</b></div>`;
+  }).join('');
+  const body = rows.map(name => {
+    const r = S.regulars.find(x => x.name === name), n = days.filter(d => taken.has(d + '|' + name)).length;
+    const cells = days.map(d => {
+      const on = taken.has(d + '|' + name);
+      return `<button class="hm-cell ${on ? 'on' : ''} ${d === today() ? 'today' : ''}" data-act="sup-cell" data-name="${esc(name)}" data-date="${d}" title="${esc(name)}, ${dayLabel(d)}: ${on ? 'taken' : 'not taken'}"></button>`;
+    }).join('');
+    return `<div class="hm-name" style="--c:${supColor(name)}"><b><i class="cdot"></i><span class="nm">${esc(name)}</span></b><span>${r ? `${esc(r.dose)} ${esc(r.unit)}` : 'one-off'}</span></div>
+      <div class="hm-cells" style="--c:${supColor(name)}">${cells}</div>
+      <div class="hm-rate"><b>${Math.round(n / days.length * 100)}%</b><span>${n}/${days.length} days</span></div>`;
+  }).join('');
+  return `<div class="hm-scroll"><div class="hm" style="--n:${days.length}"><div class="hm-name hm-corner"></div><div class="hm-cells">${head}</div><div></div>${body}</div></div>`;
+}
+
+function supLog() {
+  const dates = uniq(S.supplements.map(x => x.date)).reverse();
+  if (!dates.length) return '<p class="empty">No entries yet.</p>';
+  const groups = dates.slice(0, supLogDays).map(d => {
+    const items = S.supplements.filter(x => x.date === d).sort((a, b) => (a.time || '99').localeCompare(b.time || '99'));
+    return `<div class="day-group">
+      <div class="day-head"><b>${dayLabel(d)}</b><span class="muted small">${items.length} taken</span></div>
+      ${items.map(x => `<div class="log-item">
+        <span class="time-pill">${esc(x.time) || 'no time'}</span>
+        <i class="cdot" style="background:${supColor(x.supplement)}"></i>
+        <span class="log-name">${esc(x.supplement)}</span>
+        <span class="muted">${esc(x.dose)} ${esc(x.unit)}</span>
+        ${x.notes ? `<span class="muted small log-note">${esc(x.notes)}</span>` : ''}
+        <span class="log-acts"><button class="icon" data-act="edit" data-sec="supplements" data-id="${x.id}">Edit</button><button class="icon danger" data-act="del" data-sec="supplements" data-id="${x.id}">Delete</button></span>
+      </div>`).join('')}
+    </div>`;
+  }).join('');
+  const more = dates.length > supLogDays ? `<button class="ghost show-more" data-act="sup-more">Show older days</button>` : '';
+  return groups + more;
+}
+
+function renderSupplements() {
+  const seg = [14, 28].map(n => `<button class="${supRange === n ? 'on' : ''}" data-act="sup-range" data-n="${n}">${n / 7} weeks</button>`).join('');
+  return secHead('Supplements', 'Tick your regulars, or add a one-off entry.', addBtn('supplements', '+ Add entry')) + `
+    <div class="grid2">
+      <div class="card"><h3>Today</h3><div class="checks">${supChecklist()}</div></div>
+      <div class="card"><h3>Streaks</h3>${S.regulars.length ? `<table><tbody>${S.regulars.map(r => `<tr><td><i class="cdot" style="background:${supColor(r.name)};display:inline-block;margin-right:8px"></i>${esc(r.name)}</td><td style="text-align:right"><b>${streak(r.name)}</b> <span class="muted">${streak(r.name) === 1 ? 'day' : 'days'} in a row</span></td></tr>`).join('')}</tbody></table>` : '<p class="empty">No regular supplements yet.</p>'}</div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div><h3>History</h3><div class="muted small">Tap a square to mark that day as taken or not taken.</div></div><div class="seg">${seg}</div></div>
+      ${supHeatmap()}
+    </div>
+    <div class="card"><div class="card-head"><h3>Log by day</h3></div>${supLog()}</div>`;
+}
+
+// bedtimes after midnight count as late, not early
+function avgBedtime(nights) {
+  return toTime(Math.round(avg(nights.map(n => { const m = toMin(n.bed); return m < 720 ? m + 1440 : m; }))) % 1440);
+}
+
+function renderSleep() {
+  const g = goals(), week = S.sleep.filter(s => s.date >= daysAgo(6));
+  const last = S.sleep.slice().sort(byDateDesc)[0];
+  return secHead('Sleep', `Your plan: bed at ${esc(S.sleepPlan.bed)}, up at ${esc(S.sleepPlan.wake)}. One row per night.`, addBtn('sleep', '+ Add night')) + `
+    <div class="card"><h3>Last night</h3><div class="checks">${sleepCheck()}</div></div>
+    <div class="stats">
+      ${statCard('Last night', last ? `${round(last.hours)} h` : '-', last ? `${last.bed} to ${last.wake}` : 'Nothing logged', C.purple, last ? ratio(last.hours, g.sleepGoal) : null)}
+      ${statCard('7 day average', `${round(avg(week.map(s => num(s.hours))))} h`, `goal ${g.sleepGoal} h`, C.purple, ratio(avg(week.map(s => num(s.hours))), g.sleepGoal))}
+      ${statCard('Average bedtime', week.length ? avgBedtime(week) : '-', `plan ${esc(S.sleepPlan.bed)}, last 7 days`, C.purple, null)}
+      ${statCard('Nights on goal', `${week.filter(s => num(s.hours) >= g.sleepGoal).length} / ${week.length}`, 'last 7 days', C.purple, null)}
+    </div>
+    <div class="card"><h3>Last 30 days</h3>${lineChart(lastNDays(30).map(d => { const s = S.sleep.find(x => x.date === d); return { label: shortDate(d), value: s ? num(s.hours) : null }; }), { goal: g.sleepGoal, color: C.purple, unit: ' h', wide: true })}</div>
+    <div class="card"><h3>History</h3>${table('sleep', S.sleep.slice().sort(byDateDesc))}</div>`;
+}
+
+function renderSettings() {
+  const g = goals();
+  return secHead('Settings', 'Import your plan and manage your data.') + `
+    <div class="card"><h3>Import your plan</h3>
+      <p class="muted">Two Excel files: one for your workout plan, and one for your diet, supplements and sleep. Templates come filled with your current plan, so they also work as a backup.</p>
+      <div class="imp-group"><div><b>Workout plan</b><div class="muted small">Training days and exercises</div></div><div class="quick">${importBtns('workout')}</div></div>
+      <div class="imp-group"><div><b>Diet, supplements and sleep</b><div class="muted small">Meal plan, daily supplements, sleep schedule</div></div><div class="quick">${importBtns('other')}</div></div></div>
+    <div class="card"><h3>Daily goals</h3>
+      <p class="muted">Your goals come from your plan: ${thousands(g.calGoal)} kcal and ${g.proteinGoal} g protein from the diet plan, ${round(g.sleepGoal)} h from the sleep schedule.</p>
+      <button class="ghost" data-act="tab" data-tab="plan">Open plan</button></div>
+    <div class="card"><h3>Data</h3>
+      <p class="muted">In the real app your data lives in Supabase. This is where Download backup (.xlsx) and Sign out will go.</p>
+      <div class="quick"><button class="ghost" data-act="reset">Reset demo data</button><button class="danger-btn" data-act="clear">Clear all logged entries</button></div></div>`;
+}
+
+// ---------- import / template ----------
+const SHEETS = {
+  workout: { match: /^(workout|training|exercise)/, label: 'Workout', cols: ['Day', 'Focus', 'Exercise', 'Sets', 'Reps', 'Rest', 'Execution'] },
+  diet: { match: /^(diet|meal|food|nutrition)/, label: 'Diet', cols: ['Meal', 'Food', 'Calories', 'Protein (g)', 'Carbs (g)', 'Fat (g)'] },
+  supplements: { match: /^supp/, label: 'Supplements', cols: ['Supplement', 'Dose', 'Unit', 'When'] },
+  sleep: { match: /^sleep/, label: 'Sleep', cols: ['Setting', 'Value'] },
+};
+// header names are matched loosely: "Weight (kg)", "weight" and "Load" all work
+const ALIASES = {
+  day: ['day', 'session', 'workout'], focus: ['focus', 'title', 'subtitle', 'description'], exercise: ['exercise', 'name'], muscle: ['muscle'], sets: ['sets'], reps: ['reps', 'repetitions'], weight: ['weight', 'kg', 'load'], rest: ['rest'], notes: ['note', 'execution', 'cue', 'tip', 'comment'],
+  meal: ['meal'], food: ['food', 'item', 'dish'], calories: ['calories', 'kcal', 'cal', 'energy'], protein: ['protein'], carbs: ['carb'], fat: ['fat'],
+  supplement: ['supplement', 'name'], dose: ['dose', 'amount'], unit: ['unit'], time: ['when', 'time', 'timing'],
+};
+const norm = v => String(v ?? '').toLowerCase().replace(/[^a-z]/g, '');
+const NO_XLSX = 'Could not load the Excel reader. Check your internet connection and reload.';
+// the workout plan has its own file, diet + supplements + sleep share the other
+const IMPORTS = {
+  workout: { title: 'Import workout plan', sheets: ['workout'], file: 'workout-plan.xlsx', template: 'Download workout template' },
+  other: { title: 'Import diet, supplements and sleep', sheets: ['diet', 'supplements', 'sleep'], file: 'gym-plan.xlsx', template: 'Download template' },
+};
+const importBtns = kind => `<button class="ghost" data-act="template" data-kind="${kind}">${IMPORTS[kind].template}</button><button class="primary" data-act="import-open" data-kind="${kind}">${kind === 'workout' ? 'Import workout plan' : 'Import diet, supplements & sleep'}</button>`;
+let pendingImport = null, importKind = 'other';
+
+function parseNum(v) {
+  let t = String(v ?? '').trim().replace(/\s/g, '');
+  if (t === '') return '';
+  t = /^\d{1,3}(,\d{3})+(\.\d+)?$/.test(t) ? t.replace(/,/g, '') : t.replace(',', '.');
+  const n = Number(t);
+  return Number.isFinite(n) ? n : NaN;
+}
+function parseTime(v) {
+  const t = String(v ?? '').trim(), n = Number(t);
+  if (t !== '' && n >= 0 && n < 1) return toTime(Math.round(n * 1440));  // raw Excel time fraction
+  const m = t.match(/^(\d{1,2})[:.](\d{2})(?::\d{2})?\s*([ap]\.?m\.?)?$/i);
+  if (!m) return null;
+  let h = Number(m[1]);
+  const min = Number(m[2]);
+  if (m[3]) { const pm = /p/i.test(m[3]); h = h === 12 ? (pm ? 12 : 0) : h + (pm ? 12 : 0); }
+  return h > 23 || min > 59 ? null : `${z(h)}:${z(min)}`;
+}
+
+function sheetRows(ws) {
+  const start = ws['!ref'] ? XLSX.utils.decode_range(ws['!ref']).s.r : 0;
+  return XLSX.utils.sheet_to_json(ws, { header: 1, defval: '', raw: false, blankrows: true }).map((cells, i) => ({ cells, excelRow: start + i + 1 }));
+}
+// returns { get(key), excelRow } per data row, or null when required columns are missing
+function readTable(ws, label, keys, required, errors) {
+  const rows = sheetRows(ws);
+  const hi = rows.findIndex(r => r.cells.some(c => String(c).trim()));
+  if (hi < 0) return [];
+  const header = rows[hi].cells.map(norm), idx = {};
+  keys.forEach(k => { idx[k] = header.findIndex(h => h && ALIASES[k].some(a => h.startsWith(a))); });
+  const missing = required.filter(k => idx[k] < 0);
+  if (missing.length) { errors.push(`${label}: no ${missing.map(k => `"${k}"`).join(', ')} column found in the first row`); return null; }
+  return rows.slice(hi + 1)
+    .map(r => ({ excelRow: r.excelRow, get: k => (idx[k] >= 0 ? String(r.cells[idx[k]] ?? '').trim() : '') }))
+    .filter(r => keys.some(k => r.get(k) !== ''));
+}
+
+function parseWorkoutSheet(ws, errors) {
+  const rows = readTable(ws, 'Workout', ['day', 'focus', 'exercise', 'sets', 'reps', 'rest', 'notes'], ['day', 'exercise', 'sets', 'reps'], errors);
+  if (!rows) return null;
+  const days = [];
+  let cur = null;
+  rows.forEach(r => {
+    const at = `Workout row ${r.excelRow}`, dayName = r.get('day');
+    // a new name starts a new day, a blank Day continues the one above
+    if (dayName && (!cur || dayName !== cur.name)) days.push(cur = { id: uid('p'), name: dayName, focus: '', exercises: [] });
+    if (!cur) return errors.push(`${at}: Day is empty`);
+    if (r.get('focus') && !cur.focus) cur.focus = r.get('focus');
+    const name = r.get('exercise');
+    if (!name) {
+      if (r.get('sets') || r.get('reps')) errors.push(`${at}: Exercise is empty`);
+      return;  // a day with no exercises is a rest day
+    }
+    const sets = parseNum(r.get('sets')), reps = parseReps(r.get('reps'));
+    if (!(sets > 0)) return errors.push(`${at}: Sets must be a number above 0 (found "${r.get('sets')}")`);
+    if (!reps) return errors.push(`${at}: Reps must be a number like 8 or a range like 8-12 (found "${r.get('reps')}")`);
+    cur.exercises.push({ id: uid('e'), name, sets, reps, rest: r.get('rest'), notes: r.get('notes') });
+  });
+  return days;
+}
+
+function parseDietSheet(ws, errors) {
+  const rows = readTable(ws, 'Diet', ['meal', 'food', 'calories', 'protein', 'carbs', 'fat'], ['food', 'calories'], errors);
+  if (!rows) return null;
+  const out = [];
+  rows.forEach(r => {
+    const at = `Diet row ${r.excelRow}`, m = { id: uid('d'), meal: r.get('meal') || 'Meal', food: r.get('food') };
+    if (!m.food) return errors.push(`${at}: Food is empty`);
+    for (const k of ['calories', 'protein', 'carbs', 'fat']) {
+      const v = parseNum(r.get(k));
+      if (Number.isNaN(v) || v < 0) return errors.push(`${at}: ${k[0].toUpperCase() + k.slice(1)} must be a number (found "${r.get(k)}")`);
+      if (k === 'calories' && v === '') return errors.push(`${at}: Calories is empty`);
+      m[k] = v;
+    }
+    const known = ['Breakfast', 'Lunch', 'Dinner', 'Snack'].find(x => x.toLowerCase() === m.meal.toLowerCase());
+    if (known) m.meal = known;
+    out.push(m);
+  });
+  return out;
+}
+
+function parseSupplementSheet(ws, errors) {
+  const rows = readTable(ws, 'Supplements', ['supplement', 'dose', 'unit', 'time'], ['supplement'], errors);
+  if (!rows) return null;
+  const out = [];
+  rows.forEach(r => {
+    const at = `Supplements row ${r.excelRow}`, dose = parseNum(r.get('dose'));
+    if (!r.get('supplement')) return errors.push(`${at}: Supplement is empty`);
+    if (Number.isNaN(dose) || dose < 0) return errors.push(`${at}: Dose must be a number (found "${r.get('dose')}")`);
+    if (out.some(x => x.name.toLowerCase() === r.get('supplement').toLowerCase())) return errors.push(`${at}: "${r.get('supplement')}" is listed twice`);
+    const pickKnown = (list, v) => list.find(x => x.toLowerCase() === v.toLowerCase()) || v;
+    out.push({ id: uid('r'), name: r.get('supplement'), dose, unit: pickKnown(UNITS, r.get('unit')), time: pickKnown(SUP_TIMES, r.get('time')) });
+  });
+  return out;
+}
+
+// accepts "Bed time | 23:00" pairs, or a header row with the values underneath
+function parseSleepSheet(ws, errors) {
+  const rows = sheetRows(ws).map(r => r.cells);
+  const find = word => {
+    for (let r = 0; r < rows.length; r++) for (let c = 0; c < rows[r].length; c++) {
+      if (!norm(rows[r][c]).startsWith(word)) continue;
+      const near = [rows[r][c + 1], rows[r + 1]?.[c]].map(v => String(v ?? '').trim()).filter(Boolean);
+      return { raw: near.find(v => parseTime(v)) || near[0] || '', found: true };
+    }
+    return { found: false };
+  };
+  const plan = {};
+  for (const [key, word, label] of [['bed', 'bed', 'Bed time'], ['wake', 'wake', 'Wake time']]) {
+    const hit = find(word);
+    if (!hit.found) { errors.push(`Sleep: no "${label}" row found`); continue; }
+    const t = parseTime(hit.raw);
+    if (!t) errors.push(`Sleep: ${label} must be a time like 23:00 (found "${hit.raw}")`);
+    else plan[key] = t;
+  }
+  return plan.bed && plan.wake ? plan : null;
+}
+
+async function handleImportFile(file) {
+  if (typeof XLSX === 'undefined') return toast(NO_XLSX);
+  const cfg = IMPORTS[importKind];
+  let wb;
+  try { wb = XLSX.read(await file.arrayBuffer()); } catch (e) { return showImportPreview({ file: file.name, fatal: 'This file could not be read. Save it as .xlsx and try again.' }); }
+  const sheetKey = name => Object.keys(SHEETS).find(key => SHEETS[key].match.test(norm(name)));
+  const found = {}, ignored = [];
+  wb.SheetNames.forEach(name => {
+    const k = sheetKey(name);
+    if (k && cfg.sheets.includes(k)) { if (!found[k]) found[k] = wb.Sheets[name]; } else if (k) ignored.push(k);
+  });
+  // a workout file with one unnamed sheet is clearly the workout plan
+  const content = wb.SheetNames.filter(n => norm(n) !== 'howtouse');
+  if (importKind === 'workout' && !found.workout && content.length === 1 && !sheetKey(content[0])) found.workout = wb.Sheets[content[0]];
+  if (!Object.keys(found).length) {
+    const labels = cfg.sheets.map(k => SHEETS[k].label);
+    const want = labels.length > 1 ? `${labels.slice(0, -1).join(', ')} or ${labels.at(-1)}` : labels[0];
+    const hint = importKind === 'other' && ignored.includes('workout') ? ' This looks like a workout plan, use Import workout plan for it.'
+      : importKind === 'workout' && ignored.length ? ' This looks like a diet, supplements or sleep file, use the other import for it.' : '';
+    return showImportPreview({ file: file.name, fatal: `No ${want} sheet was found. Sheets in this file: ${wb.SheetNames.join(', ')}.${hint}` });
+  }
+  const errors = [], r = { file: file.name, errors, bad: {}, found, kind: importKind, ignoredWorkout: importKind === 'other' && ignored.includes('workout') };
+  const run = (key, prop, parse) => {
+    if (!found[key]) return;
+    const before = errors.length;
+    r[prop] = parse(found[key], errors);
+    r.bad[key] = errors.length > before;
+  };
+  run('workout', 'plan', parseWorkoutSheet);
+  run('diet', 'diet', parseDietSheet);
+  run('supplements', 'regulars', parseSupplementSheet);
+  run('sleep', 'sleepPlan', parseSleepSheet);
+  pendingImport = r;
+  showImportPreview(r);
+}
+
+function openImport(kind) {
+  importKind = kind;
+  pendingImport = null;
+  const intro = kind === 'workout'
+    ? 'Use an Excel file with a <b>Workout</b> sheet: one row per exercise, rows with the same Day become one training day. It replaces your whole workout plan.'
+    : 'Use one Excel file with up to three sheets: <b>Diet</b>, <b>Supplements</b> and <b>Sleep</b>. Only the sheets in the file get replaced.';
+  showModal(`<h3>${IMPORTS[kind].title}</h3>
+    <p class="muted">${intro} Your logged history is never touched.</p>
+    <label class="drop" id="drop"><input type="file" id="importFile" accept=".xlsx,.xls,.ods" hidden>
+      <b>Choose a file</b><span class="muted">or drop it here</span></label>
+    <div class="actions" style="justify-content:space-between"><button class="ghost" data-act="template" data-kind="${kind}">${IMPORTS[kind].template}</button><button class="ghost" data-act="close">Cancel</button></div>`);
+}
+
+function showImportPreview(r) {
+  if (r.fatal) {
+    return showModal(`<h3>${IMPORTS[importKind].title}</h3><p class="muted">${esc(r.file)}</p><div class="imp-errors">${esc(r.fatal)}</div>
+      <div class="actions"><button class="ghost" data-act="close">Close</button><button class="primary" data-act="import-open" data-kind="${importKind}">Try another file</button></div>`);
+  }
+  const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
+  // items: what the sheet produced; describe: summary when it has items; cleared: what an empty sheet wipes
+  const line = (key, label, items, describe, cleared) => {
+    if (!r.found[key]) return `<div class="imp-row skip"><b>${label}</b><span>Not in the file, stays as it is</span></div>`;
+    if (r.bad[key]) return `<div class="imp-row bad"><b>${label}</b><span>Has problems, see below</span></div>`;
+    if (Array.isArray(items) && !items.length) return `<div class="imp-row warn"><b>${label}</b><span>Empty, your ${cleared} will be cleared</span></div>`;
+    return `<div class="imp-row"><b>${label}</b><span>${describe(items)}</span></div>`;
+  };
+  const rows = (r.kind === 'workout' ? [
+    line('workout', 'Workout', r.plan, v => { const rest = v.filter(isRestDay).length; return `${plural(v.length - rest, 'workout')}${rest ? `, ${plural(rest, 'rest day')}` : ''}, ${plural(v.reduce((a, d) => a + d.exercises.length, 0), 'exercise')}`; }, 'workout plan'),
+    ...(r.plan && !r.bad.workout ? r.plan.map(d => `<div class="imp-row sub"><b>${esc(d.name)}</b><span>${isRestDay(d) ? 'Rest day' : `${daySets(d)} sets: ${d.exercises.map(e => esc(e.name)).join(', ')}`}</span></div>`) : []),
+  ] : [
+    line('diet', 'Diet', r.diet, v => `${plural(v.length, 'meal')}, ${thousands(sum(v, 'calories'))} kcal and ${sum(v, 'protein')} g protein a day`, 'meal plan'),
+    line('supplements', 'Supplements', r.regulars, v => v.map(x => esc(x.name)).join(', '), 'supplement list'),
+    line('sleep', 'Sleep', r.sleepPlan, v => `Bed at ${v.bed}, up at ${v.wake} (${round(sleepHours(v.bed, v.wake))} h)`, ''),
+    r.ignoredWorkout ? '<div class="imp-row skip"><b>Workout</b><span>Skipped, use Import workout plan for it</span></div>' : '',
+  ]).join('');
+  const errs = r.errors.length ? `<div class="imp-errors"><b>Fix ${r.errors.length === 1 ? 'this' : `these ${r.errors.length} problems`} in the file, then import it again:</b>
+    <ul>${r.errors.slice(0, 10).map(e => `<li>${esc(e)}</li>`).join('')}</ul>${r.errors.length > 10 ? `<div>and ${r.errors.length - 10} more</div>` : ''}</div>` : '';
+  showModal(`<h3>${IMPORTS[r.kind].title}</h3><p class="muted">${esc(r.file)}</p>${rows}${errs}
+    <div class="actions"><button class="ghost" data-act="${r.errors.length ? 'import-open' : 'close'}" data-kind="${r.kind}">${r.errors.length ? 'Choose another file' : 'Cancel'}</button>
+      <button class="primary" data-act="import-apply" ${r.errors.length ? 'disabled' : ''}>${r.kind === 'workout' ? 'Replace my workout plan' : 'Replace these parts'}</button></div>`);
+}
+
+function applyImport() {
+  const r = pendingImport;
+  if (!r || r.errors.length) return;
+  if (r.plan) S.plan = r.plan;
+  if (r.diet) S.diet = r.diet;
+  if (r.regulars) S.regulars = r.regulars;
+  if (r.sleepPlan) S.sleepPlan = r.sleepPlan;
+  const msg = r.kind === 'workout' ? 'Workout plan imported' : 'Plan imported';
+  pendingImport = null;
+  closeModal();
+  commit(msg);
+}
+
+function downloadTemplate(kind) {
+  if (typeof XLSX === 'undefined') return toast(NO_XLSX);
+  const wb = XLSX.utils.book_new();
+  const add = (name, rows, widths) => {
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols'] = widths.map(wch => ({ wch }));
+    XLSX.utils.book_append_sheet(wb, ws, name);
+  };
+  if (kind === 'workout') {
+    add('How to use', [
+      ['Gym Tracker workout plan'], [''],
+      ['Fill in the Workout sheet, save the file, then use Import workout plan in the app. Every day becomes a card.'],
+      ['One row per exercise. Keep the rows of a day together; leave Day empty to keep adding to the day above.'],
+      ['Focus is a short description of the day, like Width & upper chest. It only needs to be on the first row of a day.'],
+      ['Reps can be one number (8) or a range (8-12). Rest and Execution are optional.'],
+      ['A rest day is a row with only the Day filled in, for example Rest.'],
+      ['Importing replaces your whole workout plan.'],
+    ], [100]);
+    add('Workout', [SHEETS.workout.cols, ...S.plan.flatMap(d => (isRestDay(d) ? [[d.name, d.focus || '']]
+      : d.exercises.map((e, i) => [d.name, i ? '' : d.focus || '', e.name, e.sets, e.reps, e.rest || '', e.notes || ''])))], [12, 30, 32, 6, 8, 10, 64]);
+  } else {
+    add('How to use', [
+      ['Gym Tracker diet, supplements and sleep plan'], [''],
+      ['Fill in the sheets, save the file, then use Import diet, supplements & sleep in the app.'],
+      ['Diet: one row per planned meal. Your daily calorie and protein goals are the totals of this sheet.'],
+      ['Supplements: one row per supplement you take every day. These become your daily checklist.'],
+      ['Sleep: your target bed time and wake time, written like 23:00 and 07:00.'],
+      ['Delete a sheet to leave that part of your plan unchanged when importing.'],
+      ['Your workout plan has its own file: use Download workout template in the app.'],
+    ], [100]);
+    add('Diet', [SHEETS.diet.cols, ...S.diet.map(m => [m.meal, m.food, m.calories, m.protein, m.carbs, m.fat])], [12, 30, 10, 12, 10, 10]);
+    add('Supplements', [SHEETS.supplements.cols, ...S.regulars.map(r => [r.name, r.dose, r.unit, r.time || ''])], [20, 10, 10, 14]);
+    add('Sleep', [SHEETS.sleep.cols, ['Bed time', S.sleepPlan.bed], ['Wake time', S.sleepPlan.wake]], [14, 10]);
+  }
+  XLSX.writeFile(wb, IMPORTS[kind].file);
+  toast('Template downloaded');
+}
+
+const VIEWS = { dashboard: renderDashboard, plan: renderPlan, workouts: renderWorkouts, calories: renderCalories, supplements: renderSupplements, sleep: renderSleep, settings: renderSettings };
+function navBadge(k) {
+  if (k === 'supplements' && S.regulars.length) {
+    const taken = S.regulars.filter(r => S.supplements.some(x => x.date === today() && x.supplement === r.name)).length;
+    return `${taken}/${S.regulars.length}`;
+  }
+  if (k === 'workouts') return S.sessions.some(x => x.date === today()) ? '✓' : '';
+  if (k === 'sleep') return S.sleep.some(x => x.date === today()) ? '✓' : '';
+  if (k === 'calories' && goals().calGoal) return `${Math.round(sum(S.calories.filter(c => c.date === today()), 'calories') / goals().calGoal * 100)}%`;
+  return '';
+}
+function renderNav() {
+  let group = '';
+  document.getElementById('sidenav').innerHTML = TABS.map(([k, label, , color, g]) => {
+    const head = g !== group ? `<div class="nav-label">${g}</div>` : '';
+    group = g;
+    const badge = navBadge(k);
+    return `${head}<button class="nav-item ${k === tab ? 'active' : ''}" style="--c:${color}" data-act="tab" data-tab="${k}">${icon(k)}<span>${label}</span>${badge ? `<span class="badge">${badge}</span>` : ''}</button>`;
+  }).join('');
+  document.getElementById('bottomnav').innerHTML = TABS.filter(t => t[0] !== 'settings').map(([k, , short, color]) =>
+    `<button class="bn-item ${k === tab ? 'active' : ''}" style="--c:${color}" data-act="tab" data-tab="${k}"><span class="bn-ic">${icon(k)}</span>${short}</button>`).join('');
+  document.getElementById('mSettings').classList.toggle('active', tab === 'settings');
+}
+function render() {
+  const prevScroll = document.querySelector('.hm-scroll')?.scrollLeft;
+  renderNav();
+  document.getElementById('app').innerHTML = VIEWS[tab]();
+  // keep the grid where the user left it, otherwise start at today
+  const hm = document.querySelector('.hm-scroll');
+  if (hm) hm.scrollLeft = prevScroll ?? hm.scrollWidth;
+}
+function switchTab(k) {
+  if (k === tab) return;
+  tab = k;
+  history.replaceState(null, '', '#' + tab);
+  render();
+  const app = document.getElementById('app');
+  app.style.animation = 'none'; void app.offsetWidth; app.style.animation = '';
+  window.scrollTo(0, 0);
+}
+
+// ---------- actions ----------
+const finalize = (sec, v) => (sec === 'sleep' ? { ...v, hours: sleepHours(v.bed, v.wake) } : v);
+const findDay = id => S.plan.find(d => d.id === id);
+
+document.addEventListener('click', e => {
+  if (justDragged) return;  // releasing a dial drag over the backdrop must not close the form
+  if (e.target.id === 'modal') return closeModal();
+  const el = e.target.closest('[data-act]');
+  if (!el) return;
+  const { act, sec, id, name } = el.dataset, day = findDay(el.dataset.day), i = Number(el.dataset.i);
+  switch (act) {
+    case 'tab': switchTab(el.dataset.tab); break;
+    case 'close': closeModal(); break;
+
+    case 'add': {
+      const c = SECTIONS[sec];
+      const defaults = { date: today(), time: sec === 'supplements' ? nowTime() : '', meal: 'Snack', unit: 'g' };
+      openForm('Add ' + c.title, c.fields, defaults, v => { S[sec].push(finalize(sec, { id: uid(c.prefix), ...v })); commit('Added'); });
+      break;
+    }
+    case 'edit': {
+      const c = SECTIONS[sec], row = S[sec].find(r => r.id === id);
+      openForm('Edit ' + c.title, c.fields, row, v => { Object.assign(row, finalize(sec, v)); commit('Saved'); });
+      break;
+    }
+    case 'del':
+      if (!confirm('Delete this entry?')) return;
+      S[sec] = S[sec].filter(r => r.id !== id); commit('Deleted');
+      break;
+
+    case 'sup-toggle': toggleSup(name); break;
+
+    case 'sleep-check': {
+      const { bed, wake } = S.sleepPlan;
+      S.sleep.push({ id: uid('z'), date: today(), bed, wake, hours: sleepHours(bed, wake), notes: '' });
+      commit('Sleep logged');
+      break;
+    }
+    case 'sleep-other':
+      openForm('Last night', SECTIONS.sleep.fields, { date: today(), bed: S.sleepPlan.bed, wake: S.sleepPlan.wake },
+        v => { S.sleep.push(finalize('sleep', { id: uid('z'), ...v })); commit('Sleep logged'); });
+      break;
+    case 'sleep-undo':
+      S.sleep = S.sleep.filter(x => x.date !== today()); commit('Sleep entry removed');
+      break;
+    case 'sup-cell': toggleSup(name, el.dataset.date); break;
+    case 'sup-range': supRange = Number(el.dataset.n); render(); break;
+    case 'sup-more': supLogDays += 7; render(); break;
+
+    case 'plan-add-day':
+      openForm('Add day', DAY_FIELDS, {}, v => { S.plan.push({ id: uid('p'), ...v, exercises: [] }); commit('Day added'); });
+      break;
+    case 'plan-rename':
+      openForm('Edit day', DAY_FIELDS, day, v => { Object.assign(day, v); commit('Saved'); });
+      break;
+    case 'plan-del-day':
+      if (!confirm(`Delete "${day.name}" from your plan? Finished workouts stay in your history.`)) return;
+      S.plan = S.plan.filter(d => d !== day); commit('Day deleted');
+      break;
+    case 'plan-add-ex':
+      openForm(`Add exercise to ${esc(day.name)}`, PLAN_EX_FIELDS, { sets: 3, reps: '8-12', rest: '90s' }, v => { day.exercises.push({ id: uid('e'), ...v, reps: parseReps(v.reps) || v.reps }); commit('Exercise added'); });
+      break;
+    case 'plan-edit-ex':
+      openForm('Edit exercise', PLAN_EX_FIELDS, day.exercises[i], v => { Object.assign(day.exercises[i], v, { reps: parseReps(v.reps) || v.reps }); commit('Saved'); });
+      break;
+    case 'plan-del-ex':
+      day.exercises.splice(i, 1); commit('Exercise removed');
+      break;
+    case 'plan-up':
+      [day.exercises[i - 1], day.exercises[i]] = [day.exercises[i], day.exercises[i - 1]]; commit();
+      break;
+    case 'wo-toggle': toggleWorkout(el.dataset.day); break;
+    case 'wo-del':
+      S.sessions = S.sessions.filter(x => x.id !== id); commit('Workout removed');
+      break;
+    case 'wo-past': {
+      const names = trainingDays().map(d => d.name);
+      if (!names.length) return toast('Add a workout plan first');
+      openForm('Log a past workout', [{ key: 'date', label: 'Date', type: 'date', required: true }, { key: 'day', label: 'Workout', type: 'select', options: names }],
+        { date: daysAgo(1) }, v => {
+          const d = trainingDays().find(x => x.name === v.day);
+          if (doneOn(d.id, v.date)) return toast(`${d.name} is already marked on ${dayLabel(v.date)}`);
+          toggleWorkout(d.id, v.date);
+        });
+      break;
+    }
+    case 'plan-tab': planTab = el.dataset.k; render(); break;
+
+    case 'diet-add':
+      openForm('Add planned meal', DIET_FIELDS(), { meal: 'Breakfast' }, v => { S.diet.push({ id: uid('d'), ...v }); commit('Meal added'); });
+      break;
+    case 'diet-edit': {
+      const m = S.diet.find(x => x.id === id);
+      openForm('Edit planned meal', DIET_FIELDS(), m, v => { Object.assign(m, v); commit('Saved'); });
+      break;
+    }
+    case 'diet-del':
+      S.diet = S.diet.filter(x => x.id !== id); commit('Meal removed');
+      break;
+    case 'diet-log': {
+      const m = S.diet.find(x => x.id === id);
+      S.calories.push({ id: uid('c'), date: today(), meal: m.meal, food: m.food, calories: m.calories, protein: m.protein, carbs: m.carbs, fat: m.fat });
+      commit(`${m.food} logged`);
+      break;
+    }
+    case 'sleep-plan-edit':
+      openForm('Edit sleep schedule', SLEEP_PLAN_FIELDS, S.sleepPlan, v => { S.sleepPlan = v; commit('Saved'); });
+      break;
+
+    case 'template': downloadTemplate(el.dataset.kind || 'other'); break;
+    case 'import-open': openImport(el.dataset.kind || 'other'); break;
+    case 'import-apply': applyImport(); break;
+
+    case 'reg-add':
+      openForm('Add regular supplement', REG_FIELDS, { unit: 'g', time: 'Morning' }, v => { S.regulars.push({ id: uid('r'), ...v }); commit('Added'); });
+      break;
+    case 'reg-edit': {
+      const r = S.regulars.find(x => x.id === id);
+      openForm('Edit regular supplement', REG_FIELDS, r, v => { Object.assign(r, v); commit('Saved'); });
+      break;
+    }
+    case 'reg-del':
+      S.regulars = S.regulars.filter(x => x.id !== id); commit('Removed');
+      break;
+
+    case 'reset':
+      if (!confirm('Replace everything with fresh demo data?')) return;
+      S = seed(); commit('Demo data restored');
+      break;
+    case 'clear':
+      if (!confirm('Delete all workouts, food, supplement and sleep entries? Your plan and settings stay.')) return;
+      Object.assign(S, { sessions: [], calories: [], supplements: [], sleep: [] }); commit('Entries cleared');
+      break;
+  }
+});
+
+
+document.addEventListener('change', e => {
+  if (e.target.id === 'importFile' && e.target.files[0]) handleImportFile(e.target.files[0]);
+});
+document.addEventListener('dragover', e => {
+  const drop = e.target.closest?.('#drop');
+  if (drop) { e.preventDefault(); drop.classList.add('over'); }
+});
+document.addEventListener('dragleave', e => { e.target.closest?.('#drop')?.classList.remove('over'); });
+document.addEventListener('drop', e => {
+  const drop = e.target.closest?.('#drop');
+  if (!drop) return;
+  e.preventDefault();
+  if (e.dataTransfer.files[0]) handleImportFile(e.dataTransfer.files[0]);
+});
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+document.addEventListener('pointerdown', e => {
+  const part = e.target.closest('.sd-knob, .sd-arc');
+  if (!part) return;
+  e.preventDefault();
+  const dial = part.closest('.sdial'), svg = dial.querySelector('.sd-svg'), [b, w] = dialTimes(dial);
+  if (part.classList.contains('sd-knob')) part.focus();
+  dialDrag = { dial, svg, k: part.dataset.k || 'both', start: pointerMin(svg, e), b, w };
+  dial.classList.add('dragging');
+});
+document.addEventListener('pointermove', e => {
+  if (!dialDrag) return;
+  const { dial, svg, k, start, b, w } = dialDrag, m = pointerMin(svg, e);
+  if (k === 'bed') setDial(dial, m, w);
+  else if (k === 'wake') setDial(dial, b, m);
+  else setDial(dial, b + m - start, w + m - start);
+});
+const endDialDrag = () => {
+  if (!dialDrag) return;
+  dialDrag.dial.classList.remove('dragging');
+  dialDrag = null;
+  justDragged = true;
+  setTimeout(() => { justDragged = false; }, 0);
+};
+document.addEventListener('pointerup', endDialDrag);
+document.addEventListener('pointercancel', endDialDrag);
+document.addEventListener('keydown', e => {
+  const knob = e.target.closest?.('.sd-knob');
+  const dir = { ArrowUp: 1, ArrowRight: 1, ArrowDown: -1, ArrowLeft: -1 }[e.key];
+  if (!knob || !dir) return;
+  e.preventDefault();
+  const dial = knob.closest('.sdial'), [b, w] = dialTimes(dial), step = dir * (e.shiftKey ? 60 : 5);
+  if (knob.dataset.k === 'bed') setDial(dial, b + step, w); else setDial(dial, b, w + step);
+});
+
+document.getElementById('logo1').innerHTML = document.getElementById('logo2').innerHTML = icon('workouts');
+document.getElementById('mSettings').innerHTML = icon('settings');
+document.getElementById('sideDate').textContent = new Date().toDateString();
+render();
+</script>
+</body>
+</html>

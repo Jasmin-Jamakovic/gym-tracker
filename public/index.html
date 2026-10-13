@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gym Tracker</title>
+<link rel="stylesheet" href="style.css">
+<script src="config.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js" defer></script>
+<script type="module" src="app.js"></script>
+</head>
+<body>
+<div id="authRoot" class="auth" hidden></div>
+
+<div id="appRoot" hidden>
+  <aside class="side">
+    <div class="brand"><span class="logo" id="logo1"></span><h1>Gym Tracker</h1></div>
+    <nav id="sidenav"></nav>
+    <div class="side-foot"><span class="dot" id="syncDot"></span><span id="sideDate"></span><span class="pill" id="syncPill" style="margin-left:auto">Synced</span></div>
+  </aside>
+  <header class="mtop">
+    <div class="brand"><span class="logo" id="logo2"></span><h1>Gym Tracker</h1></div>
+    <div class="right">
+      <span class="pill pending" id="syncPillM" hidden>Not synced yet</span>
+      <button class="icon-btn" id="mSettings" data-act="tab" data-tab="settings" aria-label="Settings"></button>
+    </div>
+  </header>
+  <div class="shell">
+    <div id="notice"></div>
+    <main id="app"></main>
+  </div>
+  <nav class="bottomnav" id="bottomnav"></nav>
+</div>
+
+<div id="modal" class="overlay hidden"><div class="modal" id="modalBody"></div></div>
+<div id="toast" class="toast"></div>
+</body>
+</html>

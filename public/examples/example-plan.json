@@ -1,0 +1,323 @@
+{
+  "days": [
+    {
+      "name": "Upper A",
+      "focus": "Width & upper chest",
+      "exercises": [
+        {
+          "name": "Incline Dumbbell Press",
+          "sets": 3,
+          "reps": "6-8",
+          "rest": "120s",
+          "execution": "30° incline; full stretch on the upper pecs"
+        },
+        {
+          "name": "Weighted Pull-Up / Lat Pulldown",
+          "sets": 4,
+          "reps": "8-10",
+          "rest": "90-120s",
+          "execution": "Drive the elbows down; target the outer lats"
+        },
+        {
+          "name": "Standing Cable Lateral Raise",
+          "sets": 3,
+          "reps": "12-15",
+          "rest": "60-90s",
+          "execution": "Slight forward lean; lead with the elbow"
+        },
+        {
+          "name": "Low-to-High Cable Fly",
+          "sets": 3,
+          "reps": "12-15",
+          "rest": "60s",
+          "execution": "Squeeze the upper chest at the top"
+        },
+        {
+          "name": "Chest-Supported T-Bar Row",
+          "sets": 3,
+          "reps": "8-10",
+          "rest": "90s",
+          "execution": "Upper-back density; neutral spine throughout"
+        },
+        {
+          "name": "Reverse Pec Deck",
+          "sets": 3,
+          "reps": "15-20",
+          "rest": "45-60s",
+          "execution": "Rear delts; light load, no torso english"
+        },
+        {
+          "name": "Incline Dumbbell Curl",
+          "sets": 3,
+          "reps": "10-12",
+          "rest": "60s",
+          "execution": "Seated incline for the long-head stretch"
+        }
+      ]
+    },
+    {
+      "name": "Lower",
+      "focus": "Lower body & core",
+      "exercises": [
+        {
+          "name": "Barbell / Hack Squat",
+          "sets": 4,
+          "reps": "6-8",
+          "rest": "120s",
+          "execution": "Control the eccentric; keep depth consistent week to week"
+        },
+        {
+          "name": "Romanian Deadlift",
+          "sets": 3,
+          "reps": "8-10",
+          "rest": "90-120s",
+          "execution": "Hinge at the hips; stretch under load, do not chase depth"
+        },
+        {
+          "name": "Leg Press / Bulgarian Split Squat",
+          "sets": 3,
+          "reps": "10-12",
+          "rest": "90s",
+          "execution": "Quad volume without spinal load"
+        },
+        {
+          "name": "Seated Leg Curl",
+          "sets": 3,
+          "reps": "10-12",
+          "rest": "60-90s",
+          "execution": "Seated, not lying: trains the hamstring at long muscle length"
+        },
+        {
+          "name": "Seated Leg Extension",
+          "sets": 3,
+          "reps": "12-15",
+          "rest": "60s",
+          "execution": "Continuous tension; no lockout pause"
+        },
+        {
+          "name": "Standing Calf Raise",
+          "sets": 4,
+          "reps": "10-12",
+          "rest": "60s",
+          "execution": "Two-second pause at the bottom stretch"
+        },
+        {
+          "name": "Hanging Leg Raise",
+          "sets": 4,
+          "reps": "12-15",
+          "rest": "60s",
+          "execution": "No swing. Posterior pelvic tilt at the top"
+        }
+      ]
+    },
+    {
+      "name": "Upper B",
+      "focus": "Shoulders & arms",
+      "exercises": [
+        {
+          "name": "Overhead Dumbbell Press",
+          "sets": 3,
+          "reps": "6-8",
+          "rest": "120s",
+          "execution": "Heavy vertical press; brace the ribs down"
+        },
+        {
+          "name": "Neutral-Grip Cable Row",
+          "sets": 4,
+          "reps": "10-12",
+          "rest": "90s",
+          "execution": "Pull to the lower abdomen; mid-back thickness"
+        },
+        {
+          "name": "Lean-Away Cable Lateral Raise",
+          "sets": 4,
+          "reps": "12-15",
+          "rest": "60s",
+          "execution": "Constant tension on the lateral delt through the full arc"
+        },
+        {
+          "name": "Flat Dumbbell Press",
+          "sets": 3,
+          "reps": "8-10",
+          "rest": "90s",
+          "execution": "Deep stretch; controlled tempo down"
+        },
+        {
+          "name": "EZ-Bar Skullcrusher",
+          "sets": 4,
+          "reps": "10-12",
+          "rest": "60s",
+          "execution": "Elbows pinned; bar behind the head for long-head bias"
+        },
+        {
+          "name": "Hammer Curl",
+          "sets": 3,
+          "reps": "10-12",
+          "rest": "60s",
+          "execution": "Brachialis: widens the arm in profile"
+        }
+      ]
+    },
+    {
+      "name": "Rest",
+      "focus": "",
+      "exercises": []
+    },
+    {
+      "name": "Push",
+      "focus": "Push aesthetics",
+      "exercises": [
+        {
+          "name": "Incline Smith Press",
+          "sets": 4,
+          "reps": "8-10",
+          "rest": "90-120s",
+          "execution": "Stable and easy to load progressively. Your main upper-chest driver"
+        },
+        {
+          "name": "Seated Machine Shoulder Press",
+          "sets": 3,
+          "reps": "10-12",
+          "rest": "90s",
+          "execution": "Anterior and side delts; back flat to the pad"
+        },
+        {
+          "name": "Cable Lateral Raise",
+          "sets": 4,
+          "reps": "12-15",
+          "rest": "60s",
+          "execution": "Volume for side-delt width"
+        },
+        {
+          "name": "Weighted / Bodyweight Dip",
+          "sets": 3,
+          "reps": "8-10",
+          "rest": "90s",
+          "execution": "Forward lean for chest bias; stop at shoulder-height depth"
+        },
+        {
+          "name": "Overhead Rope Extension",
+          "sets": 4,
+          "reps": "12-15",
+          "rest": "60s",
+          "execution": "Long head at full stretch"
+        },
+        {
+          "name": "Seated Calf Raise",
+          "sets": 3,
+          "reps": "12-15",
+          "rest": "45s",
+          "execution": "Soleus; bent knee takes the gastroc out"
+        }
+      ]
+    },
+    {
+      "name": "Pull",
+      "focus": "Pull aesthetics & rear delts",
+      "exercises": [
+        {
+          "name": "Single-Arm Lat Pulldown",
+          "sets": 4,
+          "reps": "10-12",
+          "rest": "60-90s",
+          "execution": "Unilateral; addresses side-to-side asymmetry"
+        },
+        {
+          "name": "Meadows Row / Dumbbell Row",
+          "sets": 3,
+          "reps": "8-10",
+          "rest": "90s",
+          "execution": "Pull toward the hip, not the chest"
+        },
+        {
+          "name": "Face Pull",
+          "sets": 3,
+          "reps": "15-20",
+          "rest": "45-60s",
+          "execution": "Rear delts and external rotators; high elbows"
+        },
+        {
+          "name": "Rear Delt Cable Fly",
+          "sets": 3,
+          "reps": "15-20",
+          "rest": "45-60s",
+          "execution": "Straight arms, wide arc; let the rear delt do it"
+        },
+        {
+          "name": "Barbell Shrug",
+          "sets": 3,
+          "reps": "10-12",
+          "rest": "60s",
+          "execution": "Two-second hold at the top"
+        },
+        {
+          "name": "Preacher Curl",
+          "sets": 4,
+          "reps": "10-12",
+          "rest": "60s",
+          "execution": "Strict; no momentum out of the bottom"
+        },
+        {
+          "name": "Cable Crunch",
+          "sets": 4,
+          "reps": "12-15",
+          "rest": "60s",
+          "execution": "Load it and progress it like any other lift"
+        }
+      ]
+    },
+    {
+      "name": "Rest",
+      "focus": "",
+      "exercises": []
+    },
+    {
+      "name": "Lower B",
+      "focus": "Posterior chain. Mass phase only, replaces Push",
+      "exercises": [
+        {
+          "name": "Romanian Deadlift",
+          "sets": 4,
+          "reps": "6-8",
+          "rest": "150s",
+          "execution": "Heavier than the cutting version: a primary lift, not an accessory"
+        },
+        {
+          "name": "Barbell Hip Thrust",
+          "sets": 3,
+          "reps": "8-10",
+          "rest": "120s",
+          "execution": "Glutes: the largest muscle not trained directly elsewhere"
+        },
+        {
+          "name": "Seated Leg Curl",
+          "sets": 4,
+          "reps": "10-12",
+          "rest": "90s",
+          "execution": "Long-length hamstring work; seated, not lying"
+        },
+        {
+          "name": "Walking / Reverse Lunge",
+          "sets": 3,
+          "reps": "10-12",
+          "rest": "90s",
+          "execution": "Per leg. Quads and glutes under stretch"
+        },
+        {
+          "name": "Standing Calf Raise",
+          "sets": 4,
+          "reps": "8-12",
+          "rest": "60s",
+          "execution": "Heavier and lower-rep than the cutting block"
+        },
+        {
+          "name": "Weighted Decline Crunch",
+          "sets": 3,
+          "reps": "10-12",
+          "rest": "60s",
+          "execution": "Load the abs. In a surplus they grow like anything else"
+        }
+      ]
+    }
+  ]
+}

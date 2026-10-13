@@ -1,0 +1,12 @@
+:8080 {
+  root * /srv
+  encode zstd gzip
+  file_server
+  header /index.html Cache-Control "no-cache"
+  header /config.js Cache-Control "no-cache"
+  header {
+    X-Content-Type-Options nosniff
+    Referrer-Policy strict-origin-when-cross-origin
+    X-Frame-Options DENY
+  }
+}
