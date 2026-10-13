@@ -384,3 +384,71 @@ button.cal-d:disabled { cursor: default; }
   .swipe-dots button::after { content: ""; width: 7px; height: 7px; border-radius: 99px; background: #3a4150; transition: width .2s, background .2s; }
   .swipe-dots button.on::after { width: 18px; background: var(--text); }
 }
+
+/* Calories intake sliders */
+.intake-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.intake-head h3 { margin: 0; }
+.intake-val { font-size: 28px; font-weight: 700; color: var(--c); }
+.intake-val .muted { font-size: 14px; font-weight: 500; }
+.intake-range { width: 100%; height: 28px; margin: 0 0 8px; accent-color: var(--c); cursor: pointer; }
+
+/* Workouts on desktop: day list on the left, the selected day large on the right */
+.wo-desk { display: none; }
+@media (min-width: 901px) {
+  .wo-phone { display: none !important; }
+  .wo-desk { display: block; }
+}
+.dl { display: grid; grid-template-columns: 270px 1fr; gap: 16px; align-items: start; }
+.dl-days { display: grid; gap: 8px; position: sticky; top: 16px; }
+.dl-day { display: grid; grid-template-columns: 10px 1fr auto; gap: 12px; align-items: center; padding: 12px 14px; border-radius: 14px; border: 1px solid var(--line); background: var(--card); cursor: pointer; text-align: left; transition: border-color .15s, background .15s; }
+.dl-day:hover { border-color: color-mix(in srgb, var(--c) 60%, var(--line)); }
+.dl-day i { width: 10px; height: 38px; border-radius: 99px; background: var(--c); }
+.dl-text { min-width: 0; }
+.dl-text b { display: block; font-size: 15.5px; }
+.dl-text small { display: block; color: var(--muted); font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dl-day.on { border-color: var(--c); background: color-mix(in srgb, var(--c) 13%, var(--card)); }
+.dl-tag { font-size: 11.5px; font-weight: 700; padding: 3px 8px; border-radius: 99px; background: var(--card2); color: var(--soft, #b8bfcd); white-space: nowrap; }
+.dl-tag.done { background: rgba(53,196,124,.15); color: var(--green); }
+
+.dd { background: var(--card); border: 1px solid var(--line); border-radius: 18px; overflow: hidden; }
+.dd-stack { display: grid; gap: 16px; }
+.dd-band { padding: 22px 24px; display: flex; justify-content: space-between; align-items: flex-end; gap: 18px; flex-wrap: wrap;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--c) 72%, #000), color-mix(in srgb, var(--c) 32%, #1a1430)); }
+.dd-title { font-size: 30px; font-weight: 800; letter-spacing: -.02em; line-height: 1.15; }
+.dd-focus { color: rgba(255,255,255,.86); font-size: 15px; margin-top: 2px; }
+.dd-meta { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+.dd-meta span { font-size: 13px; font-weight: 600; padding: 4px 10px; border-radius: 99px; background: rgba(255,255,255,.18); color: #fff; }
+.dd-act { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+.dd-act span { color: rgba(255,255,255,.8); font-size: 12.5px; }
+.dd-btn { padding: 12px 22px; border-radius: 12px; border: 0; background: #fff; color: #111; font-weight: 700; font-size: 15px; cursor: pointer; }
+.dd-btn:hover { filter: brightness(.94); }
+.dd-btn.on { background: var(--green); color: #08130d; }
+.dd.done { border-color: #23573d; }
+.dd-table { width: 100%; border-collapse: collapse; }
+.dd-table th { text-align: left; color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; padding: 14px 24px 8px; border: 0; }
+.dd-table td { padding: 14px 24px; border-top: 1px solid var(--line); border-bottom: 0; vertical-align: top; }
+.dd-table tr:hover td { background: none; }
+.dd-table td.dd-idx { width: 1%; color: var(--c); font-weight: 800; font-size: 16px; padding-right: 0; }
+.dd-name { font-size: 16.5px; font-weight: 650; }
+.dd-cue { color: #b8bfcd; font-size: 14px; margin-top: 2px; }
+.dd-num { font-size: 19px; font-weight: 750; white-space: nowrap; font-variant-numeric: tabular-nums; width: 1%; }
+.dd-rest { color: #b8bfcd; white-space: nowrap; font-size: 15px; width: 1%; }
+
+/* Workouts calendar: full width, bigger dates */
+.wo-cal { margin-top: 16px; }
+.wo-cal .cal { gap: 8px; }
+.wo-cal .cal-h { font-size: 13px; font-weight: 600; padding-bottom: 2px; }
+.wo-cal .cal-d { min-height: 86px; padding: 8px 9px; gap: 5px; border-radius: 12px; }
+.wo-cal .cal-n { font-size: 17px; font-weight: 650; color: #c3c8d4; }
+.wo-cal .cal-d.today .cal-n { color: var(--text); font-weight: 800; }
+.wo-cal .cal-d.today { border-color: #8b93a7; box-shadow: inset 0 0 0 1px #8b93a7; }
+.wo-cal .cal-s { font-size: 12.5px; padding: 3px 7px; }
+.wo-cal .cal-fee svg.ic { width: 16px; height: 16px; }
+@media (max-width: 600px) {
+  .wo-cal .cal { gap: 5px; }
+  .wo-cal .cal-h { font-size: 11.5px; }
+  .wo-cal .cal-d { min-height: 54px; padding: 5px 6px; }
+  .wo-cal .cal-n { font-size: 15px; }
+  .wo-cal .cal-s { font-size: 0; height: 6px; padding: 0; }
+  .wo-cal .cal-fee svg.ic { width: 13px; height: 13px; }
+}

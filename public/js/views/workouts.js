@@ -1,7 +1,7 @@
 import { S, view, dayColor, doneOn, trainingDays } from '../state.js';
 import { byDateDesc, dayLabel, daysAgo, esc, fmt, parseDay, plural, today } from '../util.js';
-import { secHead, moreBtn } from '../ui/common.js';
-import { workoutCard } from '../ui/cards.js';
+import { secHead } from '../ui/common.js';
+import { workoutCard, dayDetail } from '../ui/cards.js';
 
 const FEE_ICON = '<svg class="ic" viewBox="0 0 24 24"><rect width="20" height="14" x="2" y="5" rx="2"/><path d="M2 10h20"/></svg>';
 
@@ -37,13 +37,34 @@ function workoutCalendar() {
     <div class="fee-row"><span class="cal-fee">${FEE_ICON}</span><div>${feeStatus()}<div class="muted small">Tap a day to mark when you paid your monthly fee.</div></div></div>`;
 }
 
+// the workout after the last one you did, in plan order
+function upNext() {
+  const days = trainingDays(), last = S.sessions.filter(x => x.dayId).sort(byDateDesc)[0];
+  const i = last ? days.findIndex(d => d.id === last.dayId) : -1;
+  return days[(i + 1) % days.length];
+}
+
+// desktop: your days on the left, the selected one large on the right
+function dayPicker() {
+  const days = trainingDays();
+  if (!days.length) return '<p class="empty">Your plan only has rest days. Add exercises in Plan.</p>';
+  const next = upNext(), sel = days.find(d => d.id === view.woDay) || next;
+  const tag = d => (doneOn(d.id, today()) ? '<span class="dl-tag done">✓ Today</span>' : d === next ? '<span class="dl-tag">Up next</span>' : '');
+  return `<div class="dl">
+    <div class="dl-days">${days.map(d => `<button class="dl-day ${d === sel ? 'on' : ''}" style="--c:${dayColor(d.id)}" data-act="wo-pick" data-day="${d.id}">
+      <i></i><span class="dl-text"><b>${esc(d.name)}</b><small>${esc(d.focus || `${d.exercises.length} exercises`)}</small></span>${tag(d)}</button>`).join('')}</div>
+    ${dayDetail(sel)}</div>`;
+}
+
 // before a workout is done: every card. After: just today's, until "Change workout" is tapped.
+// Phones get a swipe row (.wo-phone), wider screens the day list + detail (.wo-desk).
 function workoutCards() {
   if (!S.plan.length) return '<p class="empty">No plan yet. Import your workout plan in Plan.</p>';
   const doneToday = trainingDays().filter(d => doneOn(d.id, today()));
   if (doneToday.length && !view.changingWorkout) {
     return `<div class="sub-head"><h3>Today's workout</h3><button class="ghost" data-act="wo-change">Change workout</button></div>
-      <div class="wgrid">${doneToday.map(d => workoutCard(d, 'track')).join('')}</div>`;
+      <div class="wgrid wo-phone">${doneToday.map(d => workoutCard(d, 'track')).join('')}</div>
+      <div class="wo-desk dd-stack">${doneToday.map(dayDetail).join('')}</div>`;
   }
   const head = doneToday.length
     ? `<div class="sub-head"><span class="muted">Pick the workout you did today. It replaces ${esc(doneToday.map(d => d.name).join(' and '))}.</span><button class="ghost" data-act="wo-change-cancel">Cancel</button></div>`
@@ -51,7 +72,8 @@ function workoutCards() {
   const dots = S.plan.length > 1
     ? `<div class="swipe-dots">${S.plan.map((d, i) => `<button data-act="swipe-to" data-i="${i}" aria-label="Show ${esc(d.name)}" class="${i === view.woSlide ? 'on' : ''}"></button>`).join('')}</div>` : '';
   // on phones this is a swipe row, one card at a time
-  return head + `<div class="wgrid swipe" id="woSwipe">${S.plan.map(d => workoutCard(d, 'track')).join('')}</div>${dots}`;
+  return head + `<div class="wo-phone"><div class="wgrid swipe" id="woSwipe">${S.plan.map(d => workoutCard(d, 'track')).join('')}</div>${dots}</div>
+    <div class="wo-desk">${dayPicker()}</div>`;
 }
 
 // distance from one card to the next, gap included
@@ -75,11 +97,7 @@ export function showSlide(i, smooth = true) {
 
 export function renderWorkouts() {
   const week = S.sessions.filter(x => x.date >= daysAgo(6)).length, month = S.sessions.filter(x => x.date >= daysAgo(29)).length;
-  const all = S.sessions.slice().sort(byDateDesc), last = all[0], limit = view.limits.sessions;
-  const history = all.slice(0, limit).map(x => `<div class="log-item">
-      <span class="time-pill">${dayLabel(x.date)}</span><i class="cdot" style="background:${dayColor(x.dayId)}"></i><span class="log-name">${esc(x.name)}</span>
-      <span class="log-acts"><button class="icon danger" data-act="wo-del" data-id="${x.id}">Delete</button></span></div>`).join('');
-  const more = all.length > limit || S.more.sessions ? moreBtn('sessions') : '';
+  const last = S.sessions.slice().sort(byDateDesc)[0];
   return secHead('Workouts', 'Your plan as cards. Tap a workout when you finish it.', '<button class="ghost" data-act="wo-past">+ Past workout</button><button class="ghost" data-act="tab" data-tab="plan">Edit plan</button>') + `
     <div class="card wo-summary"><div class="ministats">
       <div><b>${week}</b><span>Workouts, last 7 days</span></div>
@@ -87,8 +105,5 @@ export function renderWorkouts() {
       <div><b>${last ? esc(last.name) : '-'}</b><span>${last ? `Last workout, ${dayLabel(last.date)}` : 'No workouts yet'}</span></div>
     </div></div>
     ${workoutCards()}
-    <div class="grid2" style="margin-top:16px">
-      <div class="card"><div class="card-head" style="margin-bottom:12px"><h3>Last 4 weeks</h3><button class="ghost small-btn" data-act="fee-add">+ Fee payment</button></div>${workoutCalendar()}</div>
-      <div class="card"><h3>Finished workouts</h3>${history ? history + more : '<p class="empty">Nothing yet. Tap Mark as done on a card when you finish a workout.</p>'}</div>
-    </div>`;
+    <div class="card wo-cal"><div class="card-head" style="margin-bottom:12px"><h3>Last 4 weeks</h3><button class="ghost small-btn" data-act="fee-add">+ Fee payment</button></div>${workoutCalendar()}</div>`;
 }

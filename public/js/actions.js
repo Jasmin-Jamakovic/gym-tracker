@@ -9,7 +9,7 @@ import { applyImport, downloadBackup, downloadTemplate, ensureOnline, handleImpo
 import { logout, openChangePassword, openDeleteAccount } from './auth.js';
 import { setUpLater } from './views/dashboard.js';
 import { showSlide } from './views/workouts.js';
-import { loggedToday } from './views/calories.js';
+import { INTAKE_FOOD, intakeOthers, intakeRow, loggedToday } from './views/calories.js';
 import { fetchOlder, refresh } from './sync.js';
 
 const whenLabel = date => (date === today() ? '' : ` on ${dayLabel(date)}`);
@@ -34,6 +34,7 @@ function toggleWorkout(dayId, date = today(), replace = false) {
   if (!day) return;
   view.changingWorkout = false;
   view.woSlide = Math.max(0, S.plan.indexOf(day));   // after an undo, the row opens on this card
+  view.woDay = day.id;                               // and the desktop list keeps it selected
   if (!done && replace) {
     const others = S.sessions.filter(x => x.date === date && x.dayId && x.dayId !== dayId);
     S.sessions = S.sessions.filter(x => !others.includes(x));
@@ -67,6 +68,18 @@ function toggleFee(date) {
     put('fee', row, 'user_id,date');
   }
   commit(paid ? `Fee payment removed from ${dayLabel(date)}` : `Monthly fee marked paid ${date === today() ? 'today' : `on ${dayLabel(date)}`}`);
+}
+
+// the Calories sliders set today's total; one "Daily intake" row holds whatever other logs don't cover
+function setIntake(key, total) {
+  let row = intakeRow();
+  if (!row) {
+    row = { id: uuid(), date: today(), meal: 'Day', food: INTAKE_FOOD, calories: 0, protein: '', carbs: '', fat: '' };
+    S.calories.push(row);
+  }
+  row[key] = Math.max(0, total - intakeOthers(key));
+  put('food', row);
+  commit(key === 'calories' ? `Calories set to ${total.toLocaleString()} kcal` : `Protein set to ${total} g`);
 }
 
 // one night per date; a new night upserts on the date so two devices can't double it
@@ -232,16 +245,13 @@ export function installActions({ switchTab }) {
         const current = S.plan.findIndex(d => doneOn(d.id, today()));
         view.changingWorkout = true;
         view.woSlide = Math.max(0, current);
+        view.woDay = S.plan[current]?.id ?? null;
         render();
         break;
       }
       case 'swipe-to': showSlide(Number(el.dataset.i)); break;
+      case 'wo-pick': view.woDay = el.dataset.day; render(); break;
       case 'wo-change-cancel': view.changingWorkout = false; render(); break;
-      case 'wo-del':
-        S.sessions = S.sessions.filter(x => x.id !== id);
-        del('session', id);
-        commit('Workout removed');
-        break;
       case 'fee-toggle': toggleFee(el.dataset.date); break;
       case 'fee-add':
         openForm('Monthly fee paid', [{ key: 'date', label: 'Date you paid', type: 'date', required: true }], { date: today() }, v => {
@@ -341,8 +351,19 @@ export function installActions({ switchTab }) {
     }
   });
 
+  // intake sliders: update the label while dragging, save when released
+  document.addEventListener('input', e => {
+    const el = e.target, key = el.dataset?.intake;
+    if (!key) return;
+    const v = Number(el.value), goal = Number(el.dataset.goal), unit = el.dataset.unit;
+    document.querySelector(`[data-intake-val="${key}"]`).textContent = v.toLocaleString();
+    document.querySelector(`[data-intake-sub="${key}"]`).textContent = goal
+      ? `${Math.max(goal - v, 0).toLocaleString()} ${unit} left of ${goal.toLocaleString()}` : 'No daily target set in your plan';
+  });
+
   document.addEventListener('change', e => {
     if (e.target.id === 'importFile' && e.target.files[0]) handleImportFile(e.target.files[0]);
+    if (e.target.dataset?.intake) setIntake(e.target.dataset.intake, Number(e.target.value));
   });
   document.addEventListener('dragover', e => {
     const drop = e.target.closest?.('#drop');
