@@ -17,10 +17,15 @@ create table public.exercises (
   position   int  not null default 0,
   name       text not null check (char_length(name) between 1 and 80),
   sets       int  not null check (sets between 1 and 20),
-  reps       text not null check (reps ~ '^[0-9]{1,3}(-[0-9]{1,3})?$'),
+  -- one value for every set ("8", "8-12") or one per set ("8,10,12,8")
+  reps       text not null check (reps ~ '^[0-9]{1,3}(-[0-9]{1,3})?(,[0-9]{1,3}(-[0-9]{1,3})?)*$'),
+  weight     text not null default '' check (weight ~ '^([0-9]{1,4}(\.[0-9]{1,2})?(,[0-9]{1,4}(\.[0-9]{1,2})?)*)?$'),  -- kg, same rule; '' = no weight
+  increment  numeric(5,2) not null default 0 check (increment between 0 and 100),   -- kg added to every set after a finished workout
   rest       text not null default '' check (char_length(rest) <= 20),
   execution  text not null default '' check (char_length(execution) <= 300),
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  check (cardinality(string_to_array(reps, ',')) in (1, sets)),
+  check (weight = '' or cardinality(string_to_array(weight, ',')) in (1, sets))
 );
 
 create table public.diet_plan (
@@ -61,6 +66,7 @@ create table public.workout_sessions (
   day_id     uuid references public.workout_days(id) on delete set null,
   date       date not null,
   name       text not null,             -- kept when the plan day is deleted or re-imported
+  performed  jsonb not null default '[]',  -- what was lifted and what the plan moved to: [{id, name, sets, reps, weight, next}]
   created_at timestamptz not null default now(),
   unique (user_id, day_id, date)        -- a double tap can't log the same workout twice
 );
@@ -152,9 +158,9 @@ begin
     values (i, d->>'name', coalesce(d->>'focus', '')) returning id into new_day;
     j := 0;
     for e in select value from jsonb_array_elements(coalesce(d->'exercises', '[]')) loop
-      insert into exercises (day_id, position, name, sets, reps, rest, execution)
-      values (new_day, j, e->>'name', (e->>'sets')::int, e->>'reps',
-              coalesce(e->>'rest', ''), coalesce(e->>'execution', ''));
+      insert into exercises (day_id, position, name, sets, reps, weight, increment, rest, execution)
+      values (new_day, j, e->>'name', (e->>'sets')::int, e->>'reps', coalesce(e->>'weight', ''),
+              coalesce(nullif(e->>'increment', '')::numeric, 0), coalesce(e->>'rest', ''), coalesce(e->>'execution', ''));
       j := j + 1;
     end loop;
     i := i + 1;

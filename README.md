@@ -3,11 +3,36 @@
 Plain HTML + CSS + vanilla JS (ES modules, no build step), hosted on Fly.io, with Supabase for accounts and data.
 The full design is in `gym-tracker-plan.md`; the original mockup is `gym tracker example.html`.
 
+## Screenshots
+
+| Dashboard | Cartoon theme |
+| --- | --- |
+| ![Dashboard](docs/screenshots/dashboard.png) | ![Dashboard in the Cartoon theme](docs/screenshots/cartoon-dashboard.png) |
+| **Workouts** | **Plan** |
+| ![Workouts](docs/screenshots/workouts.png) | ![Plan](docs/screenshots/plan.png) |
+| **Supplements** | **Sleep** |
+| ![Supplements](docs/screenshots/supplements.png) | ![Sleep](docs/screenshots/sleep.png) |
+| **Calories** | **Settings** |
+| ![Calories](docs/screenshots/calories.png) | ![Settings](docs/screenshots/settings.png) |
+
+On a phone the sidebar becomes a bottom bar:
+
+<p>
+  <img src="docs/screenshots/mobile-dashboard.png" alt="Dashboard on a phone" width="260">
+  <img src="docs/screenshots/mobile-workouts.png" alt="Workouts on a phone" width="260">
+</p>
+
+People log in with a username and password:
+
+<img src="docs/screenshots/login.png" alt="Log in screen" width="520">
+
 ## Setup
 
 1. **Supabase:** create a project, run `supabase/schema.sql` in the SQL Editor, and apply the Auth settings
    from section 3.4 of the plan (email provider on, **Confirm email off**, minimum password length 8).
    People log in with a username and password; there are no emails or password reset links.
+   A database created from an older `schema.sql` also needs `supabase/002_progressive_overload.sql`
+   (per-set reps and weights, and the weight increase after each finished workout).
 2. **Config:** put the Project URL and the anon / publishable key in `public/config.js`.
    Never put the service_role / secret key there. Usernames are stored in Supabase as
    `<username>@<usernameDomain>`; if Supabase says that address is invalid, set `usernameDomain` to a domain you own.

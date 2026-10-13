@@ -1,6 +1,7 @@
 // Everything a tap can do. The screen updates first (commit), then the change goes to Supabase (db.put / db.del).
 import { S, account, view, LIMIT_STEP, commit, render, doneOn, findDay, nextPosition, supTaken, trainingDays } from './state.js';
-import { byDateDesc, dayLabel, daysAgo, friendly, nowTime, OFFLINE, parseReps, sleepHours, today, uniq, uuid } from './util.js';
+import { byDateDesc, dayLabel, daysAgo, friendly, nowTime, OFFLINE, sleepHours, today, uniq, uuid } from './util.js';
+import { fmtKg, nextWeight, parseIncrement, parseRepList, parseWeightList } from './progress.js';
 import { closeModal, toast } from './ui/common.js';
 import { DAY_FIELDS, DIET_FIELDS, PLAN_EX_FIELDS, REG_FIELDS, SECTIONS, SLEEP_PLAN_FIELDS, openForm } from './ui/forms.js';
 import { wasJustDragged } from './ui/sleepdial.js';
@@ -30,6 +31,32 @@ function toggleSup(name, date = today()) {
   commit(taken ? `${name} unchecked${whenLabel(date)}` : `${name} taken${whenLabel(date)}`);
 }
 
+// finishing moves every exercise to its next weight; the session keeps both, so an undo can put them back
+function finishDay(day, date) {
+  const latest = !S.sessions.some(x => x.dayId === day.id && x.date > date);   // logging an older workout leaves the plan alone
+  const performed = day.exercises.map(e => ({ id: e.id, name: e.name, sets: e.sets, reps: e.reps, weight: e.weight || '', next: latest ? nextWeight(e) : e.weight || '' }));
+  const moved = day.exercises.filter((e, i) => performed[i].next !== performed[i].weight);
+  moved.forEach(e => { e.weight = performed.find(p => p.id === e.id).next; });
+  if (moved.length) put('exercise', moved);
+  const s = { id: uuid(), date, dayId: day.id, name: day.name, performed };
+  S.sessions.push(s);
+  put('session', s);
+  return moved;
+}
+// only an exercise still on the weight this session moved it to goes back; a later edit wins
+function unfinish(session) {
+  const back = [];
+  (session.performed || []).forEach(p => {
+    const e = S.plan.flatMap(d => d.exercises).find(x => x.id === p.id);
+    if (e && p.next !== p.weight && e.weight === p.next) { e.weight = p.weight; back.push(e); }
+  });
+  if (back.length) put('exercise', back);
+  S.sessions = S.sessions.filter(x => x !== session);
+  del('session', session.id);
+}
+const nextTime = moved => (moved.length
+  ? ` · Next time: ${moved.slice(0, 2).map(e => `${e.name} +${fmtKg(e.increment)}`).join(', ')}${moved.length > 2 ? ` and ${moved.length - 2} more` : ''}` : '');
+
 function toggleWorkout(dayId, date = today(), replace = false) {
   const day = findDay(dayId), done = doneOn(dayId, date);
   if (!day) return;
@@ -38,24 +65,11 @@ function toggleWorkout(dayId, date = today(), replace = false) {
   view.woDay = day.id;                               // and the desktop list keeps it selected
   if (!done && replace) {
     const others = S.sessions.filter(x => x.date === date && x.dayId && x.dayId !== dayId);
-    S.sessions = S.sessions.filter(x => !others.includes(x));
-    others.forEach(x => del('session', x.id));
-    if (others.length) {
-      const s = { id: uuid(), date, dayId, name: day.name };
-      S.sessions.push(s);
-      put('session', s);
-      return commit(`Changed to ${day.name}`);
-    }
+    others.forEach(unfinish);
+    if (others.length) return commit(`Changed to ${day.name}${nextTime(finishDay(day, date))}`, 4500);
   }
-  if (done) {
-    S.sessions = S.sessions.filter(x => x !== done);
-    del('session', done.id);
-  } else {
-    const s = { id: uuid(), date, dayId, name: day.name };
-    S.sessions.push(s);
-    put('session', s);
-  }
-  commit(done ? `${day.name} unmarked${whenLabel(date)}` : `${day.name} done${whenLabel(date)}`);
+  if (done) return unfinish(done), commit(`${day.name} unmarked${whenLabel(date)}`);
+  commit(`${day.name} done${whenLabel(date)}${nextTime(finishDay(day, date))}`, 4500);
 }
 
 function toggleFee(date) {
@@ -116,10 +130,12 @@ function editEntry(sec, row, v) {
 
 // ---------- plan editing ----------
 function exerciseValues(v) {
-  const reps = parseReps(v.reps);
-  if (!reps) return 'Reps must be a number like 8 or a range like 8-12.';
   if (!Number.isInteger(v.sets) || v.sets < 1 || v.sets > 20) return 'Sets must be a whole number from 1 to 20.';
-  return { ...v, reps };
+  const reps = parseRepList(v.reps, v.sets), weight = parseWeightList(v.weight, v.sets), inc = parseIncrement(v.increment);
+  const err = reps.error || weight.error || inc.error;
+  if (err) return err;
+  if (inc.value && !weight.value) return 'Add a weight first: the increase is added to it after every finished workout.';
+  return { ...v, reps: reps.value, weight: weight.value, increment: inc.value };
 }
 const sameName = (a, b) => a.trim().toLowerCase() === b.trim().toLowerCase();
 
@@ -224,7 +240,7 @@ export function installActions({ switchTab }) {
         commit('Day deleted');
         break;
       case 'plan-add-ex':
-        openForm(`Add exercise to ${day.name}`, PLAN_EX_FIELDS, { sets: 3, reps: '8-12', rest: '90s' }, v => {
+        openForm(`Add exercise to ${day.name}`, PLAN_EX_FIELDS, { sets: 3, reps: '8-12', weight: '', increment: '', rest: '90s' }, v => {
           const ok = exerciseValues(v);
           if (typeof ok === 'string') return ok;
           const ex = { id: uuid(), dayId: day.id, position: nextPosition(day.exercises), ...ok };

@@ -13,7 +13,7 @@ const r1 = v => (v === '' || v == null ? null : Math.round(Number(v) * 10) / 10)
 const FROM = {
   diet: m => ({ id: m.id, position: m.position, meal: m.meal, food: m.food, calories: m.calories, protein: blank(m.protein), carbs: blank(m.carbs), fat: blank(m.fat) }),
   regular: r => ({ id: r.id, position: r.position, name: r.name, dose: blank(r.dose), unit: r.unit, time: r.timing }),
-  session: s => ({ id: s.id, date: s.date, dayId: s.day_id, name: s.name }),
+  session: s => ({ id: s.id, date: s.date, dayId: s.day_id, name: s.name, performed: s.performed || [] }),
   food: c => ({ id: c.id, date: c.date, meal: c.meal, food: c.food, calories: c.calories, protein: blank(c.protein), carbs: blank(c.carbs), fat: blank(c.fat) }),
   supplement: x => ({ id: x.id, date: x.date, time: hhmm(x.time), supplement: x.supplement, dose: blank(x.dose), unit: x.unit, notes: x.notes }),
   sleep: x => ({ id: x.id, date: x.date, bed: hhmm(x.bed), wake: hhmm(x.wake), hours: Number(x.hours), notes: x.notes }),
@@ -22,10 +22,10 @@ const FROM = {
 
 const TO = {
   day: d => ({ id: d.id, position: d.position, name: d.name, focus: d.focus || '' }),
-  exercise: e => ({ id: e.id, day_id: e.dayId, position: e.position, name: e.name, sets: Number(e.sets), reps: String(e.reps), rest: e.rest || '', execution: e.notes || '' }),
+  exercise: e => ({ id: e.id, day_id: e.dayId, position: e.position, name: e.name, sets: Number(e.sets), reps: String(e.reps), weight: e.weight || '', increment: Number(e.increment) || 0, rest: e.rest || '', execution: e.notes || '' }),
   diet: m => ({ id: m.id, position: m.position, meal: m.meal || 'Meal', food: m.food, calories: Math.round(Number(m.calories) || 0), protein: r1(m.protein), carbs: r1(m.carbs), fat: r1(m.fat) }),
   regular: r => ({ id: r.id, position: r.position, name: r.name, dose: nul(r.dose), unit: r.unit || '', timing: r.time || '' }),
-  session: s => ({ id: s.id, date: s.date, day_id: s.dayId || null, name: s.name }),
+  session: s => ({ id: s.id, date: s.date, day_id: s.dayId || null, name: s.name, performed: s.performed || [] }),
   food: c => ({ id: c.id, date: c.date, meal: c.meal || 'Meal', food: c.food, calories: Math.round(Number(c.calories) || 0), protein: r1(c.protein), carbs: r1(c.carbs), fat: r1(c.fat) }),
   supplement: x => ({ id: x.id, date: x.date, time: x.time || null, supplement: x.supplement, dose: nul(x.dose), unit: x.unit || '', notes: x.notes || '' }),
   sleep: x => ({ id: x.id, date: x.date, bed: x.bed, wake: x.wake, hours: x.hours, notes: x.notes || '' }),
@@ -51,7 +51,7 @@ function buildPlan(days, exercises) {
   return days.map(d => ({
     id: d.id, position: d.position, name: d.name, focus: d.focus,
     exercises: exercises.filter(e => e.day_id === d.id).map(e => ({
-      id: e.id, dayId: e.day_id, position: e.position, name: e.name, sets: e.sets, reps: e.reps, rest: e.rest, notes: e.execution,
+      id: e.id, dayId: e.day_id, position: e.position, name: e.name, sets: e.sets, reps: e.reps, weight: e.weight || '', increment: Number(e.increment) || 0, rest: e.rest, notes: e.execution,
     })),
   }));
 }
@@ -122,7 +122,7 @@ export const putSleepPlan = (userId, p) => send({ table: 'sleep_plan', action: '
 export async function replaceWorkoutPlan(plan) {
   const days = plan.map(d => ({
     name: d.name, focus: d.focus || '',
-    exercises: d.exercises.map(e => ({ name: e.name, sets: Number(e.sets), reps: String(e.reps), rest: e.rest || '', execution: e.notes || '' })),
+    exercises: d.exercises.map(e => ({ name: e.name, sets: Number(e.sets), reps: String(e.reps), weight: e.weight || '', increment: Number(e.increment) || 0, rest: e.rest || '', execution: e.notes || '' })),
   }));
   must(await supabase.rpc('replace_workout_plan', { days }));
 }

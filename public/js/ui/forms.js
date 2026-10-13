@@ -62,7 +62,9 @@ export const DAY_FIELDS = [
 export const PLAN_EX_FIELDS = [
   { key: 'name', label: 'Exercise', type: 'text', required: true, max: 80, list: () => allExerciseNames() },
   { key: 'sets', label: 'Sets', type: 'number', required: true, min: 1, max: 20, step: 1 },
-  { key: 'reps', label: 'Reps, a number or a range like 8-12', type: 'text', required: true, pattern: '\\s*\\d{1,3}(\\s*[\\-–—]\\s*\\d{1,3})?\\s*', hint: 'Use a number like 8 or a range like 8-12' },
+  { key: 'reps', label: 'Reps: one for every set (8, or 8-12), or one per set (8, 10, 12, 8)', type: 'text', required: true, max: 80 },
+  { key: 'weight', label: 'Weight in kg: one for every set (80), or one per set (80, 80, 80, 90). Empty for bodyweight', type: 'text', max: 80 },
+  { key: 'increment', label: 'Increase in kg after every finished workout (added to each set, 0 or empty keeps it the same)', type: 'number', min: 0, max: 100 },
   { key: 'rest', label: 'Rest, for example 90s', type: 'text', max: 20 },
   { key: 'notes', label: 'Execution, how to do it', type: 'text', max: 300 },
 ];

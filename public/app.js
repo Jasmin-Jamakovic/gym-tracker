@@ -7,6 +7,7 @@ import { installDial } from './js/ui/sleepdial.js';
 import { installActions } from './js/actions.js';
 import { installAuth, showAuth, markOnboarded, displayName } from './js/auth.js';
 import { loadCache } from './js/cache.js';
+import { applyTheme, applyUserTheme } from './js/theme.js';
 import * as outbox from './js/outbox.js';
 import { refresh, status } from './js/sync.js';
 import { renderDashboard, onboarding } from './js/views/dashboard.js';
@@ -50,7 +51,7 @@ function renderNav() {
     const badge = navBadge(k);
     return `${head}<button class="nav-item ${k === tab ? 'active' : ''}" style="--c:${color}" data-act="tab" data-tab="${k}">${icon(k)}<span>${label}</span>${badge ? `<span class="badge">${badge}</span>` : ''}</button>`;
   }).join('');
-  document.getElementById('bottomnav').innerHTML = TABS.filter(t => t[0] !== 'settings').map(([k, , short, color]) =>
+  document.getElementById('bottomnav').innerHTML = TABS.filter(t => t[0] !== 'settings' && t[0] !== 'plan').map(([k, , short, color]) =>
     `<button class="bn-item ${k === tab ? 'active' : ''}" style="--c:${color}" data-act="tab" data-tab="${k}"><span class="bn-ic">${icon(k)}</span>${short}</button>`).join('');
   document.getElementById('mSettings').classList.toggle('active', tab === 'settings');
   const name = displayName(account.user);
@@ -102,6 +103,7 @@ let mode = 'loading';   // 'auth' | 'app'
 
 function enterAccount(user) {
   account.user = user;
+  applyUserTheme(user);
   outbox.useAccount(user.id);
   setState(loadCache(user.id) || {});   // show this account's local copy straight away
   mode = 'app';
@@ -120,6 +122,7 @@ function leaveAccount() {
 
 function handleAuth(event, session) {
   if (!session) {
+    applyTheme('classic');                // the log in screen is not anyone's
     if (account.user) leaveAccount();
     if (mode !== 'auth') showAuth('login');
     mode = 'auth';

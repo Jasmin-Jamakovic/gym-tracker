@@ -1,21 +1,22 @@
 // Excel import (checked in the browser, written with one RPC), templates and the backup download.
 import { S, isRestDay, daySets } from './state.js';
-import { esc, fmt, friendly, OFFLINE, parseReps, plural, round, sleepHours, sum, thousands, toTime, z } from './util.js';
+import { esc, fmt, friendly, OFFLINE, plural, round, sleepHours, sum, thousands, toTime, z } from './util.js';
 import { closeModal, showModal, toast } from './ui/common.js';
 import { UNITS, SUP_TIMES } from './ui/forms.js';
+import { parseIncrement, parseRepList, parseWeightList } from './progress.js';
 import { replaceWorkoutPlan, replaceOtherPlan, fetchAll, BACKUP_TABLES } from './db.js';
 import * as outbox from './outbox.js';
 import { refresh } from './sync.js';
 
 const SHEETS = {
-  workout: { match: /^(workout|training|exercise)/, label: 'Workout', cols: ['Day', 'Focus', 'Exercise', 'Sets', 'Reps', 'Rest', 'Execution'] },
+  workout: { match: /^(workout|training|exercise)/, label: 'Workout', cols: ['Day', 'Focus', 'Exercise', 'Sets', 'Reps', 'Weight (kg)', 'Increase (kg)', 'Rest', 'Execution'] },
   diet: { match: /^(diet|meal|food|nutrition)/, label: 'Diet', cols: ['Meal', 'Food', 'Calories', 'Protein (g)', 'Carbs (g)', 'Fat (g)'] },
   supplements: { match: /^supp/, label: 'Supplements', cols: ['Supplement', 'Dose', 'Unit', 'When'] },
   sleep: { match: /^sleep/, label: 'Sleep', cols: ['Setting', 'Value'] },
 };
 // header names are matched loosely: "Execution", "Notes" and "Cue" all work
 const ALIASES = {
-  day: ['day', 'session', 'workout'], focus: ['focus', 'title', 'subtitle', 'description'], exercise: ['exercise', 'name'], sets: ['sets'], reps: ['reps', 'repetitions'], rest: ['rest'], notes: ['note', 'execution', 'cue', 'tip', 'comment'],
+  day: ['day', 'session', 'workout'], focus: ['focus', 'title', 'subtitle', 'description'], exercise: ['exercise', 'name'], sets: ['sets'], reps: ['reps', 'repetitions'], weight: ['weight', 'kg', 'load'], increment: ['increase', 'increment', 'progression'], rest: ['rest'], notes: ['note', 'execution', 'cue', 'tip', 'comment'],
   meal: ['meal'], food: ['food', 'item', 'dish'], calories: ['calories', 'kcal', 'cal', 'energy'], protein: ['protein'], carbs: ['carb'], fat: ['fat'],
   supplement: ['supplement', 'name'], dose: ['dose', 'amount'], unit: ['unit'], time: ['when', 'time', 'timing'],
 };
@@ -69,7 +70,7 @@ function readTable(ws, label, keys, required, errors) {
 const tooLong = (at, label, v, max) => (v.length > max ? `${at}: ${label} is too long (${v.length} characters, at most ${max})` : null);
 
 function parseWorkoutSheet(ws, errors) {
-  const rows = readTable(ws, 'Workout', ['day', 'focus', 'exercise', 'sets', 'reps', 'rest', 'notes'], ['day', 'exercise', 'sets', 'reps'], errors);
+  const rows = readTable(ws, 'Workout', ['day', 'focus', 'exercise', 'sets', 'reps', 'weight', 'increment', 'rest', 'notes'], ['day', 'exercise', 'sets', 'reps'], errors);
   if (!rows) return null;
   const days = [];
   let cur = null;
@@ -92,13 +93,17 @@ function parseWorkoutSheet(ws, errors) {
       if (r.get('sets') || r.get('reps')) errors.push(`${at}: Exercise is empty`);
       return;  // a day with no exercises is a rest day
     }
-    const sets = parseNum(r.get('sets')), reps = parseReps(r.get('reps'));
+    const sets = parseNum(r.get('sets'));
     if (!(sets > 0)) return errors.push(`${at}: Sets must be a number above 0 (found "${r.get('sets')}")`);
     if (!Number.isInteger(sets) || sets > 20) return errors.push(`${at}: Sets must be a whole number from 1 to 20 (found "${r.get('sets')}")`);
-    if (!reps) return errors.push(`${at}: Reps must be a number like 8 or a range like 8-12 (found "${r.get('reps')}")`);
+    const reps = parseRepList(r.get('reps'), sets), weight = parseWeightList(r.get('weight'), sets), inc = parseIncrement(r.get('increment'));
+    if (reps.error) return errors.push(`${at}: ${reps.error} (found "${r.get('reps')}")`);
+    if (weight.error) return errors.push(`${at}: ${weight.error} (found "${r.get('weight')}")`);
+    if (inc.error) return errors.push(`${at}: ${inc.error} (found "${r.get('increment')}")`);
+    if (inc.value && !weight.value) return errors.push(`${at}: Increase needs a Weight to add to`);
     const long = tooLong(at, 'Exercise', name, 80) || tooLong(at, 'Rest', r.get('rest'), 20) || tooLong(at, 'Execution', r.get('notes'), 300);
     if (long) return errors.push(long);
-    cur.exercises.push({ name, sets, reps, rest: r.get('rest'), notes: r.get('notes') });
+    cur.exercises.push({ name, sets, reps: reps.value, weight: weight.value, increment: inc.value, rest: r.get('rest'), notes: r.get('notes') });
   });
   return days;
 }
@@ -296,12 +301,15 @@ export function downloadTemplate(kind) {
       ['Fill in the Workout sheet, save the file, then use Import workout plan in the app. Every day becomes a card.'],
       ['One row per exercise. Keep the rows of a day together; leave Day empty to keep adding to the day above.'],
       ['Focus is a short description of the day, like Width & upper chest. It only needs to be on the first row of a day.'],
-      ['Reps can be one number (8) or a range (8-12). Rest and Execution are optional.'],
+      ['Reps: one value for every set (8, or a range like 8-12), or one per set separated by commas or slashes (8, 10, 12, 8 or 8/10/12/8).'],
+      ['Weight (kg): the same way, one value for every set (80) or one per set (80, 80, 80, 90). Use a dot for decimals (82.5). Leave it empty for bodyweight.'],
+      ['Increase (kg): added to every set each time you finish the workout, so 10 turns 80, 80, 80, 90 into 90, 90, 90, 100. Leave it empty to keep the weight the same.'],
+      ['Rest and Execution are optional.'],
       ['A rest day is a row with only the Day filled in, for example Rest.'],
       ['Importing replaces your whole workout plan.'],
     ], [100]);
     add('Workout', [SHEETS.workout.cols, ...S.plan.flatMap(d => (isRestDay(d) ? [[d.name, d.focus || '']]
-      : d.exercises.map((e, i) => [d.name, i ? '' : d.focus || '', e.name, e.sets, e.reps, e.rest || '', e.notes || ''])))], [12, 30, 32, 6, 8, 10, 64]);
+      : d.exercises.map((e, i) => [d.name, i ? '' : d.focus || '', e.name, e.sets, e.reps.replaceAll(',', ', '), (e.weight || '').replaceAll(',', ', '), Number(e.increment) || '', e.rest || '', e.notes || ''])))], [12, 30, 32, 6, 14, 16, 12, 10, 64]);
   } else {
     add('How to use', [
       ['Gym Tracker diet, supplements and sleep plan'], [''],

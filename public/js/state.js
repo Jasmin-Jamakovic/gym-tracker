@@ -30,11 +30,11 @@ export const render = () => renderFn();
 export const meta = { version: 0 };
 
 // after every change: save the local copy, redraw, and confirm with a toast
-export function commit(msg) {
+export function commit(msg, ms) {
   meta.version++;
   saveCache(account.user?.id, S);
   render();
-  if (msg) toast(msg);
+  if (msg) toast(msg, ms);
 }
 
 // daily targets come straight from the plan
