@@ -11,6 +11,7 @@ import { setUpLater } from './views/dashboard.js';
 import { showSlide, shiftMonth, thisMonth, MONTHS_BACK, MONTHS_AHEAD } from './views/workouts.js';
 import { INTAKE_FOOD, intakeOthers, intakeRow, loggedToday } from './views/calories.js';
 import { fetchOlder, refresh } from './sync.js';
+import { setTheme } from './theme.js';
 
 const whenLabel = date => (date === today() ? '' : ` on ${dayLabel(date)}`);
 
@@ -361,6 +362,7 @@ export function installActions({ switchTab }) {
 
       case 'backup': downloadBackup(el); break;
       case 'clear': clearAll(); break;
+      case 'theme': setTheme(el.dataset.theme); render(); break;
       case 'change-password': openChangePassword(); break;
       case 'logout': logout(); break;
       case 'delete-account': openDeleteAccount(); break;
