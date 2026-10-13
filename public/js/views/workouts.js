@@ -1,4 +1,4 @@
-import { S, view, dayColor } from '../state.js';
+import { S, view, dayColor, doneOn, trainingDays } from '../state.js';
 import { byDateDesc, dayLabel, daysAgo, esc, fmt, parseDay, plural, today } from '../util.js';
 import { secHead, moreBtn } from '../ui/common.js';
 import { workoutCard } from '../ui/cards.js';
@@ -37,6 +37,42 @@ function workoutCalendar() {
     <div class="fee-row"><span class="cal-fee">${FEE_ICON}</span><div>${feeStatus()}<div class="muted small">Tap a day to mark when you paid your monthly fee.</div></div></div>`;
 }
 
+// before a workout is done: every card. After: just today's, until "Change workout" is tapped.
+function workoutCards() {
+  if (!S.plan.length) return '<p class="empty">No plan yet. Import your workout plan in Plan.</p>';
+  const doneToday = trainingDays().filter(d => doneOn(d.id, today()));
+  if (doneToday.length && !view.changingWorkout) {
+    return `<div class="sub-head"><h3>Today's workout</h3><button class="ghost" data-act="wo-change">Change workout</button></div>
+      <div class="wgrid">${doneToday.map(d => workoutCard(d, 'track')).join('')}</div>`;
+  }
+  const head = doneToday.length
+    ? `<div class="sub-head"><span class="muted">Pick the workout you did today. It replaces ${esc(doneToday.map(d => d.name).join(' and '))}.</span><button class="ghost" data-act="wo-change-cancel">Cancel</button></div>`
+    : '';
+  const dots = S.plan.length > 1
+    ? `<div class="swipe-dots">${S.plan.map((d, i) => `<button data-act="swipe-to" data-i="${i}" aria-label="Show ${esc(d.name)}" class="${i === view.woSlide ? 'on' : ''}"></button>`).join('')}</div>` : '';
+  // on phones this is a swipe row, one card at a time
+  return head + `<div class="wgrid swipe" id="woSwipe">${S.plan.map(d => workoutCard(d, 'track')).join('')}</div>${dots}`;
+}
+
+// distance from one card to the next, gap included
+const slideStep = row => (row.children.length > 1 ? row.children[1].offsetLeft - row.children[0].offsetLeft : row.clientWidth);
+
+// keep the dots in step with the card that's showing
+export function trackSwipe() {
+  document.addEventListener('scroll', e => {
+    const row = e.target;
+    if (row.id !== 'woSwipe' || !row.clientWidth) return;
+    const i = Math.round(row.scrollLeft / slideStep(row));
+    if (i === view.woSlide) return;
+    view.woSlide = i;
+    document.querySelectorAll('.swipe-dots button').forEach((b, n) => b.classList.toggle('on', n === i));
+  }, true);
+}
+export function showSlide(i, smooth = true) {
+  const row = document.getElementById('woSwipe');
+  if (row) row.scrollTo({ left: i * slideStep(row), behavior: smooth ? 'smooth' : 'instant' });
+}
+
 export function renderWorkouts() {
   const week = S.sessions.filter(x => x.date >= daysAgo(6)).length, month = S.sessions.filter(x => x.date >= daysAgo(29)).length;
   const all = S.sessions.slice().sort(byDateDesc), last = all[0], limit = view.limits.sessions;
@@ -50,7 +86,7 @@ export function renderWorkouts() {
       <div><b>${month}</b><span>Workouts, last 30 days</span></div>
       <div><b>${last ? esc(last.name) : '-'}</b><span>${last ? `Last workout, ${dayLabel(last.date)}` : 'No workouts yet'}</span></div>
     </div></div>
-    <div class="wgrid">${S.plan.map(d => workoutCard(d, 'track')).join('') || '<p class="empty">No plan yet. Import your workout plan in Plan.</p>'}</div>
+    ${workoutCards()}
     <div class="grid2" style="margin-top:16px">
       <div class="card"><div class="card-head" style="margin-bottom:12px"><h3>Last 4 weeks</h3><button class="ghost small-btn" data-act="fee-add">+ Fee payment</button></div>${workoutCalendar()}</div>
       <div class="card"><h3>Finished workouts</h3>${history ? history + more : '<p class="empty">Nothing yet. Tap Mark as done on a card when you finish a workout.</p>'}</div>

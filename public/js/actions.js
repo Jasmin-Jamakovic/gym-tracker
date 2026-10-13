@@ -8,6 +8,7 @@ import { put, del, putSleepPlan, clearLogs } from './db.js';
 import { applyImport, downloadBackup, downloadTemplate, ensureOnline, handleImportFile, openImport, useExamplePlan } from './import.js';
 import { logout, openChangePassword, openDeleteAccount } from './auth.js';
 import { setUpLater } from './views/dashboard.js';
+import { showSlide } from './views/workouts.js';
 import { loggedToday } from './views/calories.js';
 import { fetchOlder, refresh } from './sync.js';
 
@@ -28,9 +29,22 @@ function toggleSup(name, date = today()) {
   commit(taken ? `${name} unchecked${whenLabel(date)}` : `${name} taken${whenLabel(date)}`);
 }
 
-function toggleWorkout(dayId, date = today()) {
+function toggleWorkout(dayId, date = today(), replace = false) {
   const day = findDay(dayId), done = doneOn(dayId, date);
   if (!day) return;
+  view.changingWorkout = false;
+  view.woSlide = Math.max(0, S.plan.indexOf(day));   // after an undo, the row opens on this card
+  if (!done && replace) {
+    const others = S.sessions.filter(x => x.date === date && x.dayId && x.dayId !== dayId);
+    S.sessions = S.sessions.filter(x => !others.includes(x));
+    others.forEach(x => del('session', x.id));
+    if (others.length) {
+      const s = { id: uuid(), date, dayId, name: day.name };
+      S.sessions.push(s);
+      put('session', s);
+      return commit(`Changed to ${day.name}`);
+    }
+  }
   if (done) {
     S.sessions = S.sessions.filter(x => x !== done);
     del('session', done.id);
@@ -213,7 +227,16 @@ export function installActions({ switchTab }) {
         commit();
         break;
 
-      case 'wo-toggle': toggleWorkout(el.dataset.day); break;
+      case 'wo-toggle': toggleWorkout(el.dataset.day, today(), view.changingWorkout); break;
+      case 'wo-change': {
+        const current = S.plan.findIndex(d => doneOn(d.id, today()));
+        view.changingWorkout = true;
+        view.woSlide = Math.max(0, current);
+        render();
+        break;
+      }
+      case 'swipe-to': showSlide(Number(el.dataset.i)); break;
+      case 'wo-change-cancel': view.changingWorkout = false; render(); break;
       case 'wo-del':
         S.sessions = S.sessions.filter(x => x.id !== id);
         del('session', id);

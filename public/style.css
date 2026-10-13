@@ -371,3 +371,16 @@ button.cal-d:disabled { cursor: default; }
 .fee-late { color: var(--orange); font-weight: 600; }
 
 .side-user { font-weight: 600; color: var(--text); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sub-head h3 { font-size: 17px; }
+
+/* Workouts on phones: one card at a time, swipe for the next */
+.swipe-dots { display: none; }
+@media (max-width: 900px) {
+  .wgrid.swipe { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; overscroll-behavior-x: contain; scrollbar-width: none; align-items: flex-start; }
+  .wgrid.swipe::-webkit-scrollbar { display: none; }
+  .wgrid.swipe > * { flex: 0 0 100%; min-width: 0; scroll-snap-align: start; scroll-snap-stop: always; }
+  .swipe-dots { display: flex; justify-content: center; align-items: center; gap: 4px; margin-top: 12px; flex-wrap: wrap; }
+  .swipe-dots button { width: 22px; height: 22px; border: 0; padding: 0; background: none; cursor: pointer; display: grid; place-items: center; }
+  .swipe-dots button::after { content: ""; width: 7px; height: 7px; border-radius: 99px; background: #3a4150; transition: width .2s, background .2s; }
+  .swipe-dots button.on::after { width: 18px; background: var(--text); }
+}

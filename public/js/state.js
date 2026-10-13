@@ -67,6 +67,8 @@ export const supTaken = (name, date = today()) => S.supplements.some(x => x.date
 // what each page is showing right now (tabs, ranges, how far down a history list goes)
 export const view = {
   planTab: 'workout', supRange: 28,
+  changingWorkout: false,   // Workouts page: picking a different workout for today
+  woSlide: 0,               // Workouts page on phones: which card of the swipe row is showing
   limits: { sessions: 12, calories: 30, supplements: 7, sleep: 30 },
 };
 export const LIMIT_STEP = { sessions: 12, calories: 30, supplements: 7, sleep: 30 };

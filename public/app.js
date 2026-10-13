@@ -1,6 +1,6 @@
 // Startup, the auth state, routing between pages, and the navigation.
 import { configured, supabase } from './js/supabase.js';
-import { S, account, setState, setRenderer, goals } from './js/state.js';
+import { S, account, setState, setRenderer, goals, view } from './js/state.js';
 import { friendly, sum, today } from './js/util.js';
 import { icon, toast } from './js/ui/common.js';
 import { installDial } from './js/ui/sleepdial.js';
@@ -11,7 +11,7 @@ import * as outbox from './js/outbox.js';
 import { refresh, status } from './js/sync.js';
 import { renderDashboard, onboarding } from './js/views/dashboard.js';
 import { renderPlan } from './js/views/plan.js';
-import { renderWorkouts } from './js/views/workouts.js';
+import { renderWorkouts, trackSwipe, showSlide } from './js/views/workouts.js';
 import { renderCalories } from './js/views/calories.js';
 import { renderSupplements } from './js/views/supplements.js';
 import { renderSleep } from './js/views/sleep.js';
@@ -81,6 +81,7 @@ function render() {
   // keep the grid where the user left it, otherwise start at today
   const hm = document.querySelector('.hm-scroll');
   if (hm) hm.scrollLeft = prevScroll ?? hm.scrollWidth;
+  showSlide(view.woSlide, false);
   const ob = onboarding();
   if (S.loaded && ob.step1 && ob.step2 && !ob.finished) markOnboarded();
 }
@@ -140,6 +141,7 @@ document.getElementById('mSettings').innerHTML = icon('settings');
 installAuth();
 installActions({ switchTab });
 installDial();
+trackSwipe();
 
 if (!configured) {
   showAuth('setup');
