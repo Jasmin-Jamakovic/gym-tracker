@@ -69,6 +69,7 @@ export const view = {
   planTab: 'workout', supRange: 28,
   changingWorkout: false,   // Workouts page: picking a different workout for today
   woSlide: 0,               // Workouts page on phones: which card of the swipe row is showing
+  calMonth: null,           // Workouts calendar: null = last 4 weeks, 'YYYY-MM' = that month (See more)
   woDay: null,              // Workouts page on desktop: the day open on the right (null = up next)
   limits: { sessions: 12, calories: 30, supplements: 7, sleep: 30 },
 };

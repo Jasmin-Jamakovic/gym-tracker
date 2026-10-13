@@ -8,7 +8,7 @@ import { put, del, putSleepPlan, clearLogs } from './db.js';
 import { applyImport, downloadBackup, downloadTemplate, ensureOnline, handleImportFile, openImport, useExamplePlan } from './import.js';
 import { logout, openChangePassword, openDeleteAccount } from './auth.js';
 import { setUpLater } from './views/dashboard.js';
-import { showSlide } from './views/workouts.js';
+import { showSlide, shiftMonth, thisMonth, MONTHS_BACK, MONTHS_AHEAD } from './views/workouts.js';
 import { INTAKE_FOOD, intakeOthers, intakeRow, loggedToday } from './views/calories.js';
 import { fetchOlder, refresh } from './sync.js';
 
@@ -33,7 +33,7 @@ function toggleWorkout(dayId, date = today(), replace = false) {
   const day = findDay(dayId), done = doneOn(dayId, date);
   if (!day) return;
   view.changingWorkout = false;
-  view.woSlide = Math.max(0, S.plan.indexOf(day));   // after an undo, the row opens on this card
+  view.woSlide = Math.max(0, trainingDays().indexOf(day));   // after an undo, the row opens on this card
   view.woDay = day.id;                               // and the desktop list keeps it selected
   if (!done && replace) {
     const others = S.sessions.filter(x => x.date === date && x.dayId && x.dayId !== dayId);
@@ -121,6 +121,22 @@ function exerciseValues(v) {
   return { ...v, reps };
 }
 const sameName = (a, b) => a.trim().toLowerCase() === b.trim().toLowerCase();
+
+// calendar months older than the loaded history fetch the workouts they need first
+async function openMonth(ym, btn) {
+  const start = `${ym}-01`;
+  if (S.more.sessions && (!S.since.sessions || S.since.sessions > start)) {
+    if (!navigator.onLine) return toast(OFFLINE, 3000);
+    btn.disabled = true;
+    try {
+      while (S.more.sessions && (!S.since.sessions || S.since.sessions > start)) await fetchOlder('sessions');
+    } catch (e) {
+      toast(friendly(e), 3000); render(); return;
+    }
+  }
+  view.calMonth = ym;
+  render();
+}
 
 // "Show older": first show more of what's loaded, then fetch the next 90 days
 async function showMore(kind, btn) {
@@ -242,10 +258,10 @@ export function installActions({ switchTab }) {
 
       case 'wo-toggle': toggleWorkout(el.dataset.day, today(), view.changingWorkout); break;
       case 'wo-change': {
-        const current = S.plan.findIndex(d => doneOn(d.id, today()));
+        const current = trainingDays().findIndex(d => doneOn(d.id, today()));
         view.changingWorkout = true;
         view.woSlide = Math.max(0, current);
-        view.woDay = S.plan[current]?.id ?? null;
+        view.woDay = trainingDays()[current]?.id ?? null;
         render();
         break;
       }
@@ -253,13 +269,13 @@ export function installActions({ switchTab }) {
       case 'wo-pick': view.woDay = el.dataset.day; render(); break;
       case 'wo-change-cancel': view.changingWorkout = false; render(); break;
       case 'fee-toggle': toggleFee(el.dataset.date); break;
-      case 'fee-add':
-        openForm('Monthly fee paid', [{ key: 'date', label: 'Date you paid', type: 'date', required: true }], { date: today() }, v => {
-          if (v.date > today()) return "That date hasn't happened yet.";
-          if (S.fees.some(f => f.date === v.date)) return `The fee is already marked on ${dayLabel(v.date)}.`;
-          toggleFee(v.date);
-        });
+      case 'cal-more': view.calMonth = thisMonth(); render(); break;
+      case 'cal-less': view.calMonth = null; render(); break;
+      case 'cal-month': {
+        const ym = shiftMonth(view.calMonth, Number(el.dataset.step));
+        if (ym >= shiftMonth(thisMonth(), -MONTHS_BACK) && ym <= shiftMonth(thisMonth(), MONTHS_AHEAD)) openMonth(ym, el);
         break;
+      }
       case 'wo-past': {
         const names = trainingDays().map(d => d.name);
         if (!names.length) return toast('Add a workout plan first');

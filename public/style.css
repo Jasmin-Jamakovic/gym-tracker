@@ -452,3 +452,27 @@ button.cal-d:disabled { cursor: default; }
   .wo-cal .cal-s { font-size: 0; height: 6px; padding: 0; }
   .wo-cal .cal-fee svg.ic { width: 13px; height: 13px; }
 }
+
+/* Workouts calendar, month view (See more) */
+.cal-nav { display: flex; align-items: center; gap: 10px; }
+.cal-nav h3 { min-width: 150px; text-align: center; margin: 0; }
+.cal-nav button { font-size: 18px; line-height: 1; padding: 4px 12px; }
+.wo-cal .cal-d.outside { opacity: .3; }
+.cal-stats { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+.cal-stats > div { background: var(--card2); border: 1px solid var(--line); border-radius: 12px; padding: 8px 14px; display: flex; align-items: baseline; gap: 7px; }
+.cal-stats b { font-size: 18px; font-variant-numeric: tabular-nums; }
+.cal-stats span { color: var(--muted); font-size: 13px; }
+.cal-stats .cal-stat-day { border-left: 4px solid var(--c); }
+
+/* Supplements: big tap targets for ticking, streaks hidden on phones */
+.sup-checks { gap: 10px; }
+.sup-checks .check { grid-template-columns: 30px 1fr auto; gap: 14px; min-height: 60px; padding: 14px 16px; border-radius: 12px; font-size: 16px; }
+.sup-checks .check .box { width: 28px; height: 28px; border-radius: 8px; font-size: 16px; }
+@media (max-width: 600px) { .sup-streaks { display: none; } }
+/* the day the next monthly fee is due */
+.cal-d.due { border: 1.5px dashed #b8942f; opacity: 1 !important; }
+.cal-due { font-size: 11.5px; font-weight: 700; color: #f5c542; }
+@media (max-width: 600px) { .cal-due { display: none; } }
+/* future days of the month you're viewing stay readable; days of the neighboring months fade more */
+.wo-cal .cal-d.future:not(.outside) { opacity: .6; }
+.wo-cal .cal-d.outside { opacity: .22; }
