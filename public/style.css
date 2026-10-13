@@ -369,3 +369,5 @@ button.cal-d:disabled { cursor: default; }
 .fee-row { display: flex; gap: 10px; align-items: flex-start; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); font-size: 13px; }
 .fee-row .cal-fee svg.ic { width: 18px; height: 18px; margin-top: 1px; }
 .fee-late { color: var(--orange); font-weight: 600; }
+
+.side-user { font-weight: 600; color: var(--text); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

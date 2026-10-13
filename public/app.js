@@ -5,7 +5,7 @@ import { friendly, sum, today } from './js/util.js';
 import { icon, toast } from './js/ui/common.js';
 import { installDial } from './js/ui/sleepdial.js';
 import { installActions } from './js/actions.js';
-import { installAuth, showAuth, markOnboarded } from './js/auth.js';
+import { installAuth, showAuth, markOnboarded, displayName } from './js/auth.js';
 import { loadCache } from './js/cache.js';
 import * as outbox from './js/outbox.js';
 import { refresh, status } from './js/sync.js';
@@ -53,7 +53,9 @@ function renderNav() {
   document.getElementById('bottomnav').innerHTML = TABS.filter(t => t[0] !== 'settings').map(([k, , short, color]) =>
     `<button class="bn-item ${k === tab ? 'active' : ''}" style="--c:${color}" data-act="tab" data-tab="${k}"><span class="bn-ic">${icon(k)}</span>${short}</button>`).join('');
   document.getElementById('mSettings').classList.toggle('active', tab === 'settings');
-  document.getElementById('sideDate').textContent = new Date().toDateString();
+  const name = displayName(account.user);
+  document.getElementById('sideUser').textContent = name;
+  document.getElementById('sideUser').title = `Signed in as ${name}`;
 }
 
 // "Not synced yet" while the outbox has changes waiting
