@@ -1,0 +1,178 @@
+/* Terminal theme: green phosphor on black, monospace, scanlines, blinking cursor.
+   Everything is scoped to [data-theme=terminal], so the classic look in style.css stays as it is. */
+[data-theme=terminal] {
+  --phos: #39ff14; --amber: #ffb000; --cyan: #7dfcff; --void: #000;
+  --bg: #050805; --card: #0a110a; --card2: #0f1a0f; --line: #1f3d1c;
+  --text: #b8ffb0; --muted: #5f9a58; --soft: var(--text);
+  --blue: var(--phos); --green: var(--phos); --orange: var(--amber); --purple: var(--cyan); --red: #ff4d4d;
+  --glow: 0 0 6px rgba(57,255,20,.55);
+  color-scheme: dark;
+}
+/* a monochrome screen: every accent the app sets inline (tabs, days, supplements) turns phosphor green */
+[data-theme=terminal] [style*="--c"] { --c: var(--phos) !important; }
+[data-theme=terminal] *, [data-theme=terminal] *::before, [data-theme=terminal] *::after { border-radius: 0 !important; }
+[data-theme=terminal] body { font: 400 14px/1.5 'JetBrains Mono', ui-monospace, monospace; background: radial-gradient(ellipse at center, #071007 0%, var(--bg) 75%) fixed; }
+[data-theme=terminal] body::after { content: ""; position: fixed; inset: 0; z-index: 100; pointer-events: none;
+  background: repeating-linear-gradient(transparent 0 2px, rgba(0,0,0,.22) 2px 3px); }
+[data-theme=terminal] ::selection { background: var(--phos); color: var(--void); }
+[data-theme=terminal] h1, [data-theme=terminal] h2, [data-theme=terminal] h3 { font-weight: 700; letter-spacing: 0; color: var(--phos); text-shadow: var(--glow); }
+[data-theme=terminal] .sec-head h2 { font-size: 24px; }
+[data-theme=terminal] .sec-head h2::before { content: "> "; color: var(--muted); text-shadow: none; }
+[data-theme=terminal] .sec-head h2::after { content: "_"; animation: termBlink 1s steps(1) infinite; }
+[data-theme=terminal] .card > h3::before, [data-theme=terminal] .card-head h3::before { content: "# "; color: var(--muted); text-shadow: none; }
+@keyframes termBlink { 50% { opacity: 0; } }
+
+/* brand + navigation */
+[data-theme=terminal] .logo { background: none; border: 1px solid var(--phos); color: var(--phos); box-shadow: var(--glow); }
+[data-theme=terminal] .side { background: #030603; border-right: 1px solid var(--line); }
+[data-theme=terminal] .nav-label { color: var(--muted); }
+[data-theme=terminal] .nav-label::before { content: "// "; }
+[data-theme=terminal] .nav-item:hover { background: var(--card2); color: var(--phos); }
+[data-theme=terminal] .nav-item.active { background: var(--phos); color: var(--void); font-weight: 700; }
+[data-theme=terminal] .nav-item.active svg.ic { color: var(--void); }
+[data-theme=terminal] .nav-item.active::before { display: none; }
+[data-theme=terminal] .nav-item .badge { background: var(--card2); color: var(--phos); }
+[data-theme=terminal] .nav-item.active .badge { background: var(--void); color: var(--phos); }
+[data-theme=terminal] .side-foot { border-top: 1px dashed var(--line); }
+[data-theme=terminal] .mtop { background: rgba(3,6,3,.95); }
+[data-theme=terminal] .bottomnav { background: rgba(3,6,3,.97); }
+[data-theme=terminal] .bn-item.active .bn-ic { background: var(--phos); color: var(--void); }
+[data-theme=terminal] .icon-btn { background: var(--void); }
+[data-theme=terminal] .icon-btn.active { border-color: var(--phos); color: var(--phos); }
+[data-theme=terminal] .pill { background: none; }
+[data-theme=terminal] .pill.pending { color: var(--amber); border-color: #5a4300; background: none; }
+[data-theme=terminal] .dot { box-shadow: var(--glow); }
+[data-theme=terminal] .dot.pending { box-shadow: 0 0 6px rgba(255,176,0,.6); }
+
+/* cards and stats */
+[data-theme=terminal] .card, [data-theme=terminal] .modal, [data-theme=terminal] .auth-card, [data-theme=terminal] .stat, [data-theme=terminal] .dd { background: var(--card); }
+[data-theme=terminal] .stat { border-top: 1px solid var(--line); }
+[data-theme=terminal] .stat .label::before { content: "$ "; }
+[data-theme=terminal] .stat .big, [data-theme=terminal] .kpi-big, [data-theme=terminal] .intake-val { color: var(--phos); text-shadow: var(--glow); }
+[data-theme=terminal] .bar { height: 12px; padding: 2px; background: none; border: 1px solid var(--line); }
+[data-theme=terminal] .bar > div { background: repeating-linear-gradient(90deg, var(--phos) 0 6px, transparent 6px 8px); box-shadow: var(--glow); }
+
+/* dashboard tiles */
+[data-theme=terminal] .kpi { background: var(--card); }
+[data-theme=terminal] .kpi-ic { background: none; border: 1px solid var(--line); }
+[data-theme=terminal] .kpi-label { color: var(--text); }
+[data-theme=terminal] .kpi-big { font-size: 24px; font-weight: 700; }
+[data-theme=terminal] .kpi-big small, [data-theme=terminal] .kpi-big.kpi-empty { text-shadow: none; }
+[data-theme=terminal] .kpi-big.kpi-empty { color: var(--muted); }
+[data-theme=terminal] .kpi-pill { background: none; border: 1px solid var(--line); }
+[data-theme=terminal] .kpi-pill.good { background: none; border-color: var(--phos); color: var(--phos); }
+[data-theme=terminal] .kpi-pill.warn { background: none; border-color: var(--amber); color: var(--amber); }
+[data-theme=terminal] .ring .bg { stroke: var(--card2); }
+[data-theme=terminal] .ring .fg { stroke-linecap: butt; filter: drop-shadow(0 0 3px rgba(57,255,20,.6)); }
+
+/* buttons */
+[data-theme=terminal] button.primary, [data-theme=terminal] .dd-btn { background: none; border: 1px solid var(--phos); color: var(--phos); font-weight: 700; }
+[data-theme=terminal] button.primary::before, [data-theme=terminal] .dd-btn::before { content: "[ "; }
+[data-theme=terminal] button.primary::after, [data-theme=terminal] .dd-btn::after { content: " ]"; }
+[data-theme=terminal] button.primary:hover, [data-theme=terminal] .dd-btn:hover { filter: none; background: var(--phos); color: var(--void); box-shadow: var(--glow); }
+[data-theme=terminal] .dd-btn.on { background: var(--phos); color: var(--void); }
+[data-theme=terminal] button.ghost { background: none; color: var(--text); }
+[data-theme=terminal] button.ghost:hover { border-color: var(--phos); color: var(--phos); }
+[data-theme=terminal] button.danger-btn { border-color: #5a1a1a; }
+[data-theme=terminal] button.danger-btn:hover { background: var(--red); color: var(--void); }
+[data-theme=terminal] button.icon:hover { background: var(--card2); color: var(--phos); }
+[data-theme=terminal] .seg { background: none; }
+[data-theme=terminal] .seg button.on { background: var(--phos); color: var(--void); font-weight: 700; }
+[data-theme=terminal] .linkish:hover { color: var(--phos); }
+
+/* checklists */
+[data-theme=terminal] .check { background: var(--card2); }
+[data-theme=terminal] .check .box { background: var(--void); }
+[data-theme=terminal] .check.on, [data-theme=terminal] .check.sleepc.on { border-color: var(--phos); background: rgba(57,255,20,.07); }
+[data-theme=terminal] .check.on .box, [data-theme=terminal] .check.sleepc.on .box { background: var(--phos); border-color: var(--phos); color: var(--void); }
+[data-theme=terminal] .check.sleepc:not(.on):hover { border-color: var(--phos); }
+
+/* supplement history squares */
+[data-theme=terminal] .hm-cell { background: #0c140c; border-color: #1a2e18; }
+[data-theme=terminal] .hm-cell:hover { border-color: var(--phos); }
+[data-theme=terminal] .hm-cell.on { box-shadow: var(--glow); }
+[data-theme=terminal] .hm-cell.today { box-shadow: 0 0 0 2px var(--card), 0 0 0 3px var(--phos); }
+
+/* tables and lists */
+[data-theme=terminal] th { color: var(--muted); text-transform: uppercase; }
+[data-theme=terminal] td { border-bottom: 1px dashed #163015; }
+[data-theme=terminal] tr:hover td, [data-theme=terminal] .log-item:hover { background: rgba(57,255,20,.05); }
+[data-theme=terminal] .total-row td { border-top: 1px solid var(--phos); }
+[data-theme=terminal] .time-pill, [data-theme=terminal] .wc-sets, [data-theme=terminal] .dl-tag { background: none; border: 1px solid var(--line); color: var(--text); }
+[data-theme=terminal] .wc-table td.n, [data-theme=terminal] .dd-cue, [data-theme=terminal] .dd-rest { color: var(--text); }
+[data-theme=terminal] .ex-note { color: var(--muted); }
+[data-theme=terminal] .logged { text-shadow: var(--glow); }
+
+/* workouts */
+[data-theme=terminal] .wcard { background: var(--card); border-top-width: 1px; }
+[data-theme=terminal] .wcard.done { border-color: var(--phos); background: var(--card); }
+[data-theme=terminal] .wc-title { color: var(--phos); }
+[data-theme=terminal] .wc-btn { border-color: var(--line); background: none; }
+[data-theme=terminal] .wc-btn.on, [data-theme=terminal] .wo-chip.on { border-color: var(--phos); background: rgba(57,255,20,.07); color: var(--phos); }
+[data-theme=terminal] .wo-chip { background: none; }
+[data-theme=terminal] .dl-day { background: var(--card); }
+[data-theme=terminal] .dl-day.on { background: rgba(57,255,20,.08); }
+[data-theme=terminal] .dl-day i { width: 4px; }
+[data-theme=terminal] .dd-band { background: #0c1a0c; border-bottom: 1px solid var(--line); }
+[data-theme=terminal] .dd-title { color: var(--phos); text-shadow: var(--glow); }
+[data-theme=terminal] .dd-focus, [data-theme=terminal] .dd-act span { color: var(--muted); }
+[data-theme=terminal] .dd-meta span { background: none; border: 1px solid var(--line); color: var(--text); }
+[data-theme=terminal] .dd.done { border-color: var(--phos); }
+[data-theme=terminal] .dd-set { background: none; }
+[data-theme=terminal] .dd-set i { background: var(--card2); }
+
+/* calendar */
+[data-theme=terminal] .cal-d { background: #081008; border-color: #183318; }
+[data-theme=terminal] .cal-d.today, [data-theme=terminal] .wo-cal .cal-d.today { border-color: var(--phos); box-shadow: inset 0 0 0 1px var(--phos); }
+[data-theme=terminal] .wo-cal .cal-n { color: var(--text); }
+[data-theme=terminal] .cal-d.paid { background: rgba(255,176,0,.06); border-color: #5a4300; }
+[data-theme=terminal] .cal-d.due { border-color: var(--amber); }
+[data-theme=terminal] .cal-fee, [data-theme=terminal] .cal-due { color: var(--amber); }
+[data-theme=terminal] button.cal-d:not(:disabled):hover { border-color: var(--phos); }
+[data-theme=terminal] .cal-stats > div { background: none; }
+[data-theme=terminal] .swipe-dots button::after { background: var(--line); }
+[data-theme=terminal] .swipe-dots button.on::after { background: var(--phos); }
+
+/* charts: the colors are SVG attributes, which CSS overrides */
+[data-theme=terminal] .chart .gl { stroke: #133012; stroke-dasharray: 2 4; }
+[data-theme=terminal] .chart rect { fill: var(--phos); fill-opacity: .8; rx: 0; }
+[data-theme=terminal] .chart polyline { stroke: var(--phos); filter: drop-shadow(0 0 3px rgba(57,255,20,.6)); }
+[data-theme=terminal] .chart circle { fill: var(--phos); }
+[data-theme=terminal] .chart line[stroke-dasharray] { stroke: var(--amber); stroke-opacity: .8; }
+
+/* sleep dial */
+[data-theme=terminal] .sdial { background: var(--card2); }
+[data-theme=terminal] .sd-t { background: var(--void); }
+[data-theme=terminal] .sd-t.bed b, [data-theme=terminal] .sd-t.bed svg, [data-theme=terminal] .sd-knob[data-k=bed] .kic { color: var(--cyan); }
+[data-theme=terminal] .sd-t.wake b, [data-theme=terminal] .sd-t.wake svg, [data-theme=terminal] .sd-knob[data-k=wake] .kic { color: var(--amber); }
+[data-theme=terminal] .sd-knob[data-k=bed] circle { stroke: var(--cyan); }
+[data-theme=terminal] .sd-knob[data-k=wake] circle { stroke: var(--amber); }
+[data-theme=terminal] .sd-knob circle { fill: var(--void); }
+[data-theme=terminal] .sd-track { stroke: #0c140c; }
+[data-theme=terminal] .sd-arc { stroke: var(--phos); stroke-linecap: butt; }
+[data-theme=terminal] .sd-ticks line { stroke: var(--line); }
+[data-theme=terminal] .sd-ticks line.maj { stroke: var(--muted); }
+
+/* forms, modal, toast, notices */
+[data-theme=terminal] .overlay { background: rgba(0,0,0,.8); }
+[data-theme=terminal] .modal { border-color: var(--phos); box-shadow: 0 0 24px rgba(57,255,20,.15); }
+[data-theme=terminal] input, [data-theme=terminal] select { background: var(--void); caret-color: var(--phos); }
+[data-theme=terminal] input:focus, [data-theme=terminal] select:focus { border-color: var(--phos); box-shadow: var(--glow); }
+[data-theme=terminal] input[type=checkbox], [data-theme=terminal] .intake-range { accent-color: var(--phos); }
+[data-theme=terminal] .toast { background: var(--void); border-color: var(--phos); color: var(--phos); box-shadow: var(--glow); }
+[data-theme=terminal] .toast::before { content: "> "; }
+[data-theme=terminal] .banner { background: #081008; border-color: var(--line); color: var(--text); }
+[data-theme=terminal] .banner.error, [data-theme=terminal] .imp-errors, [data-theme=terminal] .form-msg.err { background: #140606; border-color: #5a1a1a; color: #ff9a9a; }
+[data-theme=terminal] .form-msg.ok { background: rgba(57,255,20,.06); border-color: var(--phos); color: var(--phos); }
+[data-theme=terminal] .drop:hover, [data-theme=terminal] .drop.over { border-color: var(--phos); background: rgba(57,255,20,.05); }
+[data-theme=terminal] .imp-row { background: none; }
+[data-theme=terminal] .wl-step.done .wl-n { color: var(--void); }
+
+@media (max-width: 600px) {
+  [data-theme=terminal] .sec-head h2 { font-size: 20px; }
+  [data-theme=terminal] .kpi-big { font-size: 20px; }
+  [data-theme=terminal] .dd-title { font-size: 22px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-theme=terminal] .sec-head h2::after { animation: none; }
+}

@@ -1,4 +1,4 @@
-// The look of the app: 'classic' (dark) or 'cartoon'. Saved on the account (user_metadata.theme), so it follows
+// The look of the app: one of THEMES, 'classic' (dark) by default. Saved on the account (user_metadata.theme), so it follows
 // the user to every device. This browser keeps the last one too, so index.html can apply it before the first paint.
 import { supabase } from './supabase.js';
 import { account } from './state.js';
@@ -6,8 +6,9 @@ import { friendly } from './util.js';
 import { toast } from './ui/common.js';
 
 const KEY = 'gym_theme';
-export const THEMES = [['classic', 'Classic'], ['cartoon', 'Cartoon']];
-const valid = t => (t === 'cartoon' ? 'cartoon' : 'classic');
+// every theme but classic has its own <name>.css scoped to [data-theme=<name>]; keep the list in index.html in sync
+export const THEMES = [['classic', 'Classic'], ['cartoon', 'Cartoon'], ['notebook', 'Notebook'], ['forge', 'Iron Forge'], ['terminal', 'Terminal'], ['arcade', '8-bit Arcade']];
+const valid = t => (THEMES.some(([k]) => k === t) ? t : 'classic');
 
 export const getTheme = () => valid(document.documentElement.dataset.theme);
 

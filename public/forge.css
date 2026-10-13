@@ -1,0 +1,172 @@
+/* Iron Forge theme: brushed steel, hazard yellow, stencil headings, near-square corners.
+   Everything is scoped to [data-theme=forge], so the classic look in style.css stays as it is. */
+[data-theme=forge] {
+  --hazard: #ffc21a; --steel: #2d3033; --iron: #141516; --rivet: #4a4e53;
+  --bg: #1a1b1d; --card: #26282b; --card2: #313438; --line: #3f4246;
+  --text: #ece8df; --muted: #9a958a; --red: #ff4b2b; --soft: #c9c4b8;
+  --stripes: repeating-linear-gradient(-45deg, var(--hazard) 0 8px, var(--iron) 8px 16px);
+  color-scheme: dark;
+}
+[data-theme=forge] body {
+  font: 500 15px/1.45 'Barlow', system-ui, sans-serif;
+  background: radial-gradient(circle at 1px 1px, rgba(255,255,255,.045) 1px, transparent 0) 0 0 / 6px 6px, var(--bg);
+}
+[data-theme=forge] h1, [data-theme=forge] h2, [data-theme=forge] h3 { font-family: 'Black Ops One', system-ui; font-weight: 400; letter-spacing: .04em; text-transform: uppercase; }
+[data-theme=forge] .sec-head h2 { font-size: 34px; line-height: 1.05; }
+[data-theme=forge] .sec-head h2::after { content: ""; display: block; width: 72px; height: 7px; margin-top: 10px; background: var(--stripes); }
+[data-theme=forge] .brand h1 { font-size: 18px; }
+
+/* labels and numbers in a condensed industrial face */
+[data-theme=forge] .nav-item, [data-theme=forge] .bn-item, [data-theme=forge] .nav-label, [data-theme=forge] .stat .label, [data-theme=forge] .kpi-label,
+[data-theme=forge] th, [data-theme=forge] .pill, [data-theme=forge] .kpi-pill, [data-theme=forge] .wc-sets, [data-theme=forge] .dl-tag, [data-theme=forge] .time-pill,
+[data-theme=forge] button.primary, [data-theme=forge] button.ghost, [data-theme=forge] button.danger-btn, [data-theme=forge] .dd-btn, [data-theme=forge] .seg button,
+[data-theme=forge] .wc-btn, [data-theme=forge] .wo-chip, [data-theme=forge] .toast, [data-theme=forge] .ci-label, [data-theme=forge] .cal-h {
+  font-family: 'Oswald', system-ui, sans-serif; text-transform: uppercase; letter-spacing: .06em; }
+[data-theme=forge] .stat .big, [data-theme=forge] .kpi-big, [data-theme=forge] .intake-val, [data-theme=forge] .dd-idx, [data-theme=forge] .ring b,
+[data-theme=forge] .cal-stats b, [data-theme=forge] .ministats b, [data-theme=forge] .dd-plain, [data-theme=forge] .hm-rate b, [data-theme=forge] .sd-t b {
+  font-family: 'Oswald', system-ui, sans-serif; font-weight: 600; letter-spacing: .02em; }
+[data-theme=forge] .kpi-big small, [data-theme=forge] .kpi-big.kpi-empty, [data-theme=forge] .intake-val .muted { font-family: 'Barlow', sans-serif; font-weight: 500; letter-spacing: 0; text-transform: none; }
+
+/* square-ish corners everywhere */
+[data-theme=forge] .card, [data-theme=forge] .stat, [data-theme=forge] .kpi, [data-theme=forge] .wcard, [data-theme=forge] .dd, [data-theme=forge] .modal, [data-theme=forge] .auth-card,
+[data-theme=forge] .dl-day, [data-theme=forge] .check, [data-theme=forge] .check .box, [data-theme=forge] .imp-row, [data-theme=forge] .cal-d, [data-theme=forge] .cal-s, [data-theme=forge] .sdial, [data-theme=forge] .sd-t,
+[data-theme=forge] .cal-stats > div, [data-theme=forge] input, [data-theme=forge] select, [data-theme=forge] button.primary, [data-theme=forge] button.ghost, [data-theme=forge] button.danger-btn,
+[data-theme=forge] .seg, [data-theme=forge] .seg button, [data-theme=forge] .wo-chip, [data-theme=forge] .wc-btn, [data-theme=forge] .dd-btn, [data-theme=forge] .icon-btn, [data-theme=forge] .nav-item,
+[data-theme=forge] .bn-item .bn-ic, [data-theme=forge] .toast, [data-theme=forge] .banner, [data-theme=forge] .hm-cell, [data-theme=forge] .dd-set, [data-theme=forge] .dd-set i, [data-theme=forge] .wc-sets,
+[data-theme=forge] .dl-tag, [data-theme=forge] .dl-day i, [data-theme=forge] .pill, [data-theme=forge] .time-pill, [data-theme=forge] .kpi-pill, [data-theme=forge] .kpi-ic, [data-theme=forge] .dd-meta span,
+[data-theme=forge] .form-msg, [data-theme=forge] .imp-errors, [data-theme=forge] .log-item, [data-theme=forge] .nav-item .badge { border-radius: 3px; }
+
+/* brand + navigation */
+[data-theme=forge] .logo { background: var(--hazard); color: var(--iron); border-radius: 3px; box-shadow: inset 0 -3px 0 rgba(0,0,0,.25); }
+[data-theme=forge] .side { background: var(--iron); border-right: 1px solid #000; box-shadow: inset -1px 0 0 #2b2d30; }
+[data-theme=forge] .nav-label { color: #6f6b62; }
+[data-theme=forge] .nav-item { font-size: 15px; font-weight: 500; }
+[data-theme=forge] .nav-item:hover { background: var(--steel); }
+[data-theme=forge] .nav-item.active { background: linear-gradient(90deg, color-mix(in srgb, var(--c) 18%, transparent), transparent); }
+[data-theme=forge] .nav-item.active::before { width: 4px; border-radius: 0; }
+[data-theme=forge] .nav-item .badge { background: var(--hazard); color: var(--iron); }
+[data-theme=forge] .side-foot { border-top: 1px solid #2b2d30; }
+[data-theme=forge] .mtop { background: rgba(20,21,22,.95); border-bottom: 1px solid #000; }
+[data-theme=forge] .bottomnav { background: rgba(20,21,22,.97); border-top: 4px solid; border-image: var(--stripes) 1; }
+[data-theme=forge] .icon-btn { background: var(--steel); border-color: #000; }
+[data-theme=forge] .icon-btn.active { border-color: var(--hazard); }
+[data-theme=forge] .pill { background: var(--iron); }
+[data-theme=forge] .pill.pending { color: var(--hazard); border-color: #6b5410; background: rgba(255,194,26,.08); }
+
+/* cards: brushed plates with rivets */
+[data-theme=forge] .card, [data-theme=forge] .modal, [data-theme=forge] .auth-card {
+  background:
+    radial-gradient(circle at 9px 9px, var(--rivet) 2px, transparent 2.6px),
+    radial-gradient(circle at calc(100% - 9px) 9px, var(--rivet) 2px, transparent 2.6px),
+    linear-gradient(180deg, #2b2e31, var(--card) 70%);
+  border-color: #111213; box-shadow: inset 0 1px 0 rgba(255,255,255,.05), 0 2px 0 #0e0f10; }
+[data-theme=forge] .stat { background: linear-gradient(180deg, #2b2e31, var(--card)); border-color: #111213; border-top: 4px solid var(--c); }
+[data-theme=forge] .stat .label { font-size: 12px; letter-spacing: .1em; }
+[data-theme=forge] .bar { height: 10px; border-radius: 0; background: var(--iron); box-shadow: inset 0 1px 2px #000; }
+[data-theme=forge] .bar > div { border-radius: 0; background: repeating-linear-gradient(-45deg, var(--c) 0 7px, color-mix(in srgb, var(--c) 55%, #000) 7px 14px); }
+
+/* dashboard tiles */
+[data-theme=forge] .kpi { background: linear-gradient(180deg, #2d3033, #232528); border-color: #111213; border-top: 4px solid var(--c); box-shadow: 0 2px 0 #0e0f10; }
+[data-theme=forge] .kpi-ic { background: var(--iron); color: var(--c); box-shadow: inset 0 0 0 1px #3a3d41; }
+[data-theme=forge] .kpi-label { color: var(--soft); letter-spacing: .1em; }
+[data-theme=forge] .kpi-big { font-size: 30px; }
+[data-theme=forge] .kpi-pill { background: var(--iron); }
+[data-theme=forge] .ring .bg { stroke: var(--iron); }
+[data-theme=forge] .ring .fg { stroke-linecap: butt; }
+
+/* buttons */
+[data-theme=forge] button.primary { background: var(--hazard); color: var(--iron); font-weight: 600; box-shadow: inset 0 -3px 0 rgba(0,0,0,.25); }
+[data-theme=forge] button.primary:hover { filter: brightness(1.08); }
+[data-theme=forge] button.primary:active { box-shadow: none; transform: translateY(1px); }
+[data-theme=forge] button.ghost { background: var(--steel); border-color: #111213; box-shadow: inset 0 1px 0 rgba(255,255,255,.06); }
+[data-theme=forge] button.ghost:hover { border-color: var(--hazard); }
+[data-theme=forge] button.danger-btn { border-color: #7a2a1a; }
+[data-theme=forge] button.icon:hover { background: var(--steel); }
+[data-theme=forge] .seg { background: var(--iron); border-color: #000; }
+[data-theme=forge] .seg button.on { background: var(--hazard); color: var(--iron); font-weight: 600; }
+[data-theme=forge] .linkish:hover { color: var(--hazard); }
+
+/* checklists */
+[data-theme=forge] .check { background: var(--steel); border-color: #111213; }
+[data-theme=forge] .check .box { border-color: #55595e; background: var(--iron); }
+[data-theme=forge] .check.on { border-color: #4d6b1e; background: #1f2617; }
+[data-theme=forge] .check.on .box { background: var(--green); border-color: var(--green); }
+[data-theme=forge] .check.sleepc.on .box { background: var(--purple); border-color: var(--purple); }
+[data-theme=forge] .check.sleepc.on { border-color: #4a3a75; background: #1f1a2e; }
+
+/* supplement history squares */
+[data-theme=forge] .hm-cell { background: var(--iron); border-color: #34373b; }
+[data-theme=forge] .hm-cell:hover { border-color: var(--hazard); }
+[data-theme=forge] .hm-cell.today { box-shadow: 0 0 0 2px var(--card), 0 0 0 3.5px var(--hazard); }
+
+/* tables and lists */
+[data-theme=forge] th { font-size: 12px; letter-spacing: .1em; }
+[data-theme=forge] td { border-bottom-color: #2c2f33; }
+[data-theme=forge] tr:hover td, [data-theme=forge] .log-item:hover { background: #222427; }
+[data-theme=forge] .total-row td { border-top: 2px solid var(--hazard); }
+[data-theme=forge] .day-head { border-bottom: 2px solid #34373b; }
+[data-theme=forge] .wc-table td.n, [data-theme=forge] .dd-cue, [data-theme=forge] .dd-rest { color: var(--soft); }
+[data-theme=forge] .ex-note { color: var(--muted); }
+
+/* workouts */
+[data-theme=forge] .wcard { background: linear-gradient(180deg, #2b2e31, var(--card) 40%); border-color: #111213; border-top: 5px solid var(--c); border-radius: 3px; box-shadow: 0 2px 0 #0e0f10; }
+[data-theme=forge] .wcard.done { border-color: #4d6b1e; border-top-color: var(--green); background: linear-gradient(180deg, rgba(53,196,124,.08), var(--card) 35%); }
+[data-theme=forge] .wcard.rest { border: 1px dashed #4a4e53; background: transparent; box-shadow: none; }
+[data-theme=forge] .wc-title { font-family: 'Black Ops One', system-ui; font-weight: 400; font-size: 19px; letter-spacing: .04em; text-transform: uppercase; }
+[data-theme=forge] .wc-btn { border-color: #55595e; background: var(--iron); }
+[data-theme=forge] .wc-btn.on { border-color: #4d6b1e; background: #1f2617; }
+[data-theme=forge] .wo-chip { background: var(--steel); border-color: #111213; }
+[data-theme=forge] .wo-chip.on { background: #1f2617; border-color: #4d6b1e; }
+[data-theme=forge] .dl-day { background: linear-gradient(180deg, #2b2e31, var(--card)); border-color: #111213; }
+[data-theme=forge] .dl-day i { width: 6px; }
+[data-theme=forge] .dl-text b { font-family: 'Oswald', sans-serif; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+[data-theme=forge] .dd { border-color: #111213; }
+[data-theme=forge] .dd-band { border-bottom: 4px solid; border-image: var(--stripes) 1; }
+[data-theme=forge] .dd-title { font-family: 'Black Ops One', system-ui; font-weight: 400; font-size: 34px; letter-spacing: .04em; text-transform: uppercase; text-shadow: 0 2px 0 rgba(0,0,0,.4); }
+[data-theme=forge] .dd-btn { background: var(--hazard); color: var(--iron); box-shadow: inset 0 -3px 0 rgba(0,0,0,.25); }
+[data-theme=forge] .dd-btn.on { background: var(--green); }
+[data-theme=forge] .dd-meta span { background: rgba(0,0,0,.3); }
+[data-theme=forge] .dd.done { border-color: #4d6b1e; }
+
+/* calendar */
+[data-theme=forge] .cal-d { background: #212326; border-color: #34373b; }
+[data-theme=forge] .cal-d.today, [data-theme=forge] .wo-cal .cal-d.today { border-color: var(--hazard); box-shadow: inset 0 0 0 1px var(--hazard); }
+[data-theme=forge] .wo-cal .cal-n { font-family: 'Oswald', sans-serif; color: var(--soft); }
+[data-theme=forge] .cal-d.paid { background: #29251a; border-color: #6b5410; }
+[data-theme=forge] .cal-d.due { border-color: var(--hazard); }
+[data-theme=forge] .cal-fee, [data-theme=forge] .cal-due { color: var(--hazard); }
+[data-theme=forge] button.cal-d:not(:disabled):hover { border-color: var(--hazard); }
+[data-theme=forge] .cal-stats > div { background: var(--steel); border-color: #111213; }
+[data-theme=forge] .swipe-dots button::after { background: #4a4e53; border-radius: 0; }
+[data-theme=forge] .swipe-dots button.on::after { background: var(--hazard); }
+
+/* charts */
+[data-theme=forge] .chart .gl { stroke: #2f3236; }
+[data-theme=forge] .chart line[stroke-dasharray] { stroke: var(--hazard); stroke-opacity: .8; }
+[data-theme=forge] .chart rect { rx: 0; }
+
+/* sleep dial */
+[data-theme=forge] .sdial { background: var(--steel); border-color: #111213; }
+[data-theme=forge] .sd-t { background: var(--iron); border-color: #111213; }
+[data-theme=forge] .sd-track { stroke: var(--iron); }
+[data-theme=forge] .sd-arc { stroke-linecap: butt; }
+[data-theme=forge] .sd-knob circle { fill: var(--steel); }
+
+/* forms, modal, toast, notices */
+[data-theme=forge] .overlay { background: rgba(0,0,0,.7); }
+[data-theme=forge] input, [data-theme=forge] select { background: var(--iron); border-color: #000; box-shadow: inset 0 1px 2px rgba(0,0,0,.6); }
+[data-theme=forge] input:focus, [data-theme=forge] select:focus { border-color: var(--hazard); }
+[data-theme=forge] input[type=checkbox], [data-theme=forge] .intake-range { accent-color: var(--hazard); }
+[data-theme=forge] .toast { background: var(--hazard); border: 0; color: var(--iron); font-weight: 600; box-shadow: 0 3px 0 #000; }
+[data-theme=forge] .banner { background: var(--steel); border-color: #111213; border-left: 6px solid var(--hazard); color: var(--text); }
+[data-theme=forge] .banner.error { border-left-color: var(--red); }
+[data-theme=forge] .drop:hover, [data-theme=forge] .drop.over { border-color: var(--hazard); background: rgba(255,194,26,.06); }
+[data-theme=forge] .imp-row { background: var(--steel); }
+[data-theme=forge] .wl-n { background: var(--iron); border-radius: 3px; }
+[data-theme=forge] ::selection { background: var(--hazard); color: var(--iron); }
+
+@media (max-width: 600px) {
+  [data-theme=forge] .sec-head h2 { font-size: 28px; }
+  [data-theme=forge] .kpi-big { font-size: 24px; }
+  [data-theme=forge] .dd-title { font-size: 26px; }
+}

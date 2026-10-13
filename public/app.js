@@ -21,7 +21,7 @@ import { renderSettings } from './js/views/settings.js';
 // key, label, short label for the phone bar, accent color, sidebar group
 const TABS = [
   ['dashboard', 'Dashboard', 'Home', '#e8eaf0', 'Overview'],
-  ['plan', 'Plan', 'Plan', '#4f8cff', 'Overview'],
+  ['plan', 'Edit your plan', 'Plan', '#4f8cff', 'Overview'],
   ['workouts', 'Workouts', 'Lifts', '#4f8cff', 'Track'],
   ['calories', 'Calories', 'Food', '#ff9f43', 'Track'],
   ['supplements', 'Supplements', 'Supps', '#35c47c', 'Track'],

@@ -1,0 +1,202 @@
+/* 8-bit Arcade theme: pixel fonts, square corners, hard black shadows, segmented "health bar" progress, Sweetie-16 colors.
+   Everything is scoped to [data-theme=arcade], so the classic look in style.css stays as it is. */
+[data-theme=arcade] {
+  --night: #0d0e17; --deep: #13141f; --gold: #ffcd75; --berry: #b13e53; --sky: #73eff7;
+  --bg: #1a1c2c; --card: #262b44; --card2: #333c57; --line: #566c86;
+  --text: #f4f4f4; --muted: #94b0c2; --soft: var(--muted);
+  --blue: #41a6f6; --orange: #ef7d57; --green: #a7f070; --red: #e04a62;
+  --px: 4px 4px 0 var(--night); --px-sm: 3px 3px 0 var(--night);
+  --bevel: inset 3px 3px 0 rgba(255,255,255,.08), inset -3px -3px 0 rgba(0,0,0,.25);
+  --pixel: 'Press Start 2P', monospace;
+  color-scheme: dark;
+}
+[data-theme=arcade] *, [data-theme=arcade] *::before, [data-theme=arcade] *::after { border-radius: 0 !important; }
+[data-theme=arcade] body { font: 400 16px/1.45 'Pixelify Sans', system-ui, sans-serif; background: var(--bg); }
+[data-theme=arcade] ::selection { background: var(--gold); color: var(--night); }
+[data-theme=arcade] h1, [data-theme=arcade] h2, [data-theme=arcade] h3 { font-family: var(--pixel); font-weight: 400; line-height: 1.4; letter-spacing: 0; }
+[data-theme=arcade] h3 { font-size: 12px; }
+[data-theme=arcade] .sec-head h2 { font-size: 20px; color: var(--gold); text-shadow: 3px 3px 0 var(--berry); }
+[data-theme=arcade] .sec-head .muted { margin-top: 6px; }
+
+/* small labels in the pixel font */
+[data-theme=arcade] .nav-label, [data-theme=arcade] .stat .label, [data-theme=arcade] .kpi-label, [data-theme=arcade] th, [data-theme=arcade] .ci-label,
+[data-theme=arcade] button.primary, [data-theme=arcade] button.ghost, [data-theme=arcade] button.danger-btn, [data-theme=arcade] .dd-btn, [data-theme=arcade] .seg button, [data-theme=arcade] .toast {
+  font-family: var(--pixel); font-size: 9px; font-weight: 400; line-height: 1.6; letter-spacing: 0; text-transform: uppercase; }
+[data-theme=arcade] .stat .big, [data-theme=arcade] .kpi-big, [data-theme=arcade] .intake-val, [data-theme=arcade] .dd-table td.dd-idx, [data-theme=arcade] .ring b,
+[data-theme=arcade] .cal-stats b, [data-theme=arcade] .ministats div b { font-family: var(--pixel); font-weight: 400; letter-spacing: 0; }
+[data-theme=arcade] .kpi-big small, [data-theme=arcade] .kpi-big.kpi-empty, [data-theme=arcade] .intake-val .muted { font-family: 'Pixelify Sans', sans-serif; }
+
+/* brand + navigation */
+[data-theme=arcade] .brand h1 { font-size: 11px; }
+[data-theme=arcade] .logo { background: var(--berry); color: #fff; box-shadow: var(--px-sm), var(--bevel); }
+[data-theme=arcade] .side { background: var(--deep); border-right: 3px solid var(--night); }
+[data-theme=arcade] .nav-label { font-size: 8px; color: var(--line); }
+[data-theme=arcade] .nav-item { font-size: 17px; color: var(--muted); }
+[data-theme=arcade] .nav-item:hover { background: var(--card); color: var(--text); }
+[data-theme=arcade] .nav-item.active { background: var(--gold); color: var(--night); box-shadow: var(--px-sm); }
+[data-theme=arcade] .nav-item.active svg.ic { color: var(--night); }
+[data-theme=arcade] .nav-item.active::before { display: none; }
+[data-theme=arcade] .nav-item .badge, [data-theme=arcade] .nav-item.active .badge { background: var(--berry); color: #fff; }
+[data-theme=arcade] .side-foot { border-top: 3px solid var(--night); }
+[data-theme=arcade] .pill { background: var(--deep); border: 2px solid var(--card2); }
+[data-theme=arcade] .pill.pending { color: var(--gold); border-color: var(--gold); background: var(--deep); }
+[data-theme=arcade] .mtop { background: var(--deep); backdrop-filter: none; border-bottom: 3px solid var(--night); }
+[data-theme=arcade] .icon-btn { background: var(--card); border: 3px solid var(--night); box-shadow: var(--bevel); }
+[data-theme=arcade] .icon-btn.active { color: var(--gold); }
+[data-theme=arcade] .bottomnav { background: var(--deep); backdrop-filter: none; border-top: 3px solid var(--night); }
+[data-theme=arcade] .bn-item { font-size: 13px; }
+[data-theme=arcade] .bn-item.active .bn-ic { background: var(--gold); color: var(--night); }
+
+/* cards: beveled pixel panels with a hard shadow */
+[data-theme=arcade] .card, [data-theme=arcade] .modal, [data-theme=arcade] .auth-card, [data-theme=arcade] .stat, [data-theme=arcade] .dd {
+  background: var(--card); border: 3px solid var(--night); box-shadow: var(--bevel), var(--px); }
+[data-theme=arcade] .card, [data-theme=arcade] .stats, [data-theme=arcade] .kpis { margin-bottom: 20px; }
+[data-theme=arcade] .grid2 { gap: 20px; }
+[data-theme=arcade] .stat { border-top: 6px solid var(--c); }
+[data-theme=arcade] .stat .big { font-size: 18px; margin-top: 8px; }
+/* segmented health bar */
+[data-theme=arcade] .bar { height: 14px; background: var(--night); border: 3px solid var(--night); }
+[data-theme=arcade] .bar > div { background: repeating-linear-gradient(90deg, var(--c) 0 8px, transparent 8px 10px); }
+
+/* dashboard tiles */
+[data-theme=arcade] .kpi { background: var(--card); border: 3px solid var(--night); box-shadow: inset 0 5px 0 var(--c), var(--bevel), var(--px); }
+[data-theme=arcade] .kpi-ic { background: var(--deep); color: var(--c); box-shadow: inset 0 0 0 2px var(--night); }
+[data-theme=arcade] .kpi-label { font-size: 8px; color: var(--text); }
+[data-theme=arcade] .kpi-pill { background: var(--deep); font-size: 13px; }
+[data-theme=arcade] .kpi-pill.good { background: var(--deep); }
+[data-theme=arcade] .kpi-pill.warn { background: var(--deep); }
+[data-theme=arcade] .kpi-big { font-size: 18px; line-height: 1.3; }
+[data-theme=arcade] .kpi-big small { font-size: 14px; }
+[data-theme=arcade] .kpi-big.kpi-empty { font-size: 17px; }
+[data-theme=arcade] .ring .bg { stroke: var(--night); }
+[data-theme=arcade] .ring .fg { stroke-linecap: butt; stroke-width: 8; }
+[data-theme=arcade] .ring b { font-size: 9px; }
+
+/* buttons: chunky, press down on click */
+[data-theme=arcade] button.primary, [data-theme=arcade] button.ghost, [data-theme=arcade] button.danger-btn, [data-theme=arcade] .dd-btn {
+  padding: 10px 14px; border: 3px solid var(--night); box-shadow: var(--bevel), var(--px-sm); transition: transform .06s steps(1); }
+[data-theme=arcade] button.primary { background: var(--berry); color: #fff; }
+[data-theme=arcade] button.ghost { background: var(--card2); color: var(--text); }
+[data-theme=arcade] button.danger-btn { background: #5d275d; color: #fff; }
+[data-theme=arcade] .dd-btn { background: var(--gold); color: var(--night); }
+[data-theme=arcade] .dd-btn.on { background: var(--green); color: var(--night); }
+[data-theme=arcade] button.primary:hover, [data-theme=arcade] button.ghost:hover, [data-theme=arcade] button.danger-btn:hover, [data-theme=arcade] .dd-btn:hover { filter: brightness(1.12); border-color: var(--night); }
+[data-theme=arcade] button.primary:active, [data-theme=arcade] button.ghost:active, [data-theme=arcade] button.danger-btn:active, [data-theme=arcade] .dd-btn:active { transform: translate(3px, 3px); box-shadow: var(--bevel); }
+[data-theme=arcade] button.icon:hover { background: var(--card2); }
+[data-theme=arcade] .seg { background: var(--deep); border: 3px solid var(--night); }
+[data-theme=arcade] .seg button { font-size: 8px; padding: 7px 10px; }
+[data-theme=arcade] .seg button.on { background: var(--gold); color: var(--night); }
+[data-theme=arcade] .linkish:hover { color: var(--gold); }
+
+/* checklists */
+[data-theme=arcade] .check { background: var(--card2); border: 3px solid var(--night); box-shadow: var(--bevel); }
+[data-theme=arcade] .check .box { background: var(--deep); border: 3px solid var(--line); }
+[data-theme=arcade] .check.on { background: #24402e; border-color: #38b764; }
+[data-theme=arcade] .check.on .box { background: var(--green); border-color: var(--night); color: var(--night); }
+[data-theme=arcade] .check.sleepc.on { background: #3a2445; border-color: var(--purple); }
+[data-theme=arcade] .check.sleepc.on .box { border-color: var(--night); }
+[data-theme=arcade] .check.sleepc:not(.on):hover { border-color: var(--purple); }
+
+/* supplement history squares */
+[data-theme=arcade] .hm-cell { background: var(--deep); border: 2px solid var(--card2); }
+[data-theme=arcade] .hm-cell:hover { border-color: var(--gold); transform: none; }
+[data-theme=arcade] .hm-cell.on { border-color: var(--night); box-shadow: inset -3px -3px 0 rgba(0,0,0,.25); }
+[data-theme=arcade] .hm-cell.today { box-shadow: 0 0 0 2px var(--card), 0 0 0 4px var(--gold); }
+[data-theme=arcade] .hm-day.today b { background: var(--gold); color: var(--night); }
+
+/* tables and lists */
+[data-theme=arcade] th { font-size: 8px; color: var(--muted); border-bottom: 3px solid var(--night); }
+[data-theme=arcade] td { border-bottom: 2px dotted var(--card2); }
+[data-theme=arcade] tr:hover td, [data-theme=arcade] .log-item:hover { background: var(--card2); }
+[data-theme=arcade] .total-row td { border-top: 3px solid var(--night); }
+[data-theme=arcade] .day-head { border-bottom: 3px solid var(--night); }
+[data-theme=arcade] .time-pill, [data-theme=arcade] .wc-sets, [data-theme=arcade] .dl-tag { background: var(--deep); border: 2px solid var(--night); color: var(--muted); }
+[data-theme=arcade] .wc-table td.n, [data-theme=arcade] .dd-cue, [data-theme=arcade] .dd-rest { color: var(--muted); }
+[data-theme=arcade] .ex-note { color: var(--line); }
+
+/* workouts */
+[data-theme=arcade] .wcard { background: var(--card); border: 3px solid var(--night); border-top: 8px solid var(--c); box-shadow: var(--bevel), var(--px); }
+[data-theme=arcade] .wcard.done { border-color: var(--night); border-top-color: var(--green); background: linear-gradient(180deg, #24402e, var(--card) 35%); }
+[data-theme=arcade] .wcard.rest { border: 3px dashed var(--card2); background: transparent; box-shadow: none; }
+[data-theme=arcade] .wc-title { font-family: var(--pixel); font-weight: 400; font-size: 13px; line-height: 1.4; }
+[data-theme=arcade] .wc-btn { border: 3px dashed var(--line); background: var(--deep); }
+[data-theme=arcade] .wc-btn.on, [data-theme=arcade] .wo-chip.on { border: 3px solid #38b764; background: #24402e; color: var(--green); }
+[data-theme=arcade] .wo-chip { background: var(--card2); border: 3px solid var(--night); box-shadow: var(--bevel); }
+[data-theme=arcade] .wo-chip i { width: 10px; height: 10px; }
+[data-theme=arcade] .dl-day { background: var(--card); border: 3px solid var(--night); box-shadow: var(--bevel); }
+[data-theme=arcade] .dl-day.on { border-color: var(--c); box-shadow: var(--px-sm); }
+[data-theme=arcade] .dl-text b { font-family: var(--pixel); font-size: 10px; line-height: 1.6; }
+[data-theme=arcade] .dd-band { background: color-mix(in srgb, var(--c) 55%, var(--bg)); border-bottom: 3px solid var(--night); }
+[data-theme=arcade] .dd-title { font-family: var(--pixel); font-weight: 400; font-size: 22px; line-height: 1.35; letter-spacing: 0; color: #fff; text-shadow: 3px 3px 0 var(--night); }
+[data-theme=arcade] .dd-meta span { background: rgba(13,14,23,.35); }
+[data-theme=arcade] .dd.done { border-color: var(--night); }
+[data-theme=arcade] .dd-table td.dd-idx { font-size: 12px; }
+[data-theme=arcade] .dd-set { border: 2px solid var(--night); background: var(--deep); }
+[data-theme=arcade] .intake-val { font-size: 20px; }
+
+/* calendar */
+[data-theme=arcade] .cal-d { background: var(--deep); border: 2px solid var(--card2); }
+[data-theme=arcade] .cal-d.today, [data-theme=arcade] .wo-cal .cal-d.today { border-color: var(--gold); box-shadow: var(--px-sm); }
+[data-theme=arcade] .wo-cal .cal-n { color: var(--muted); }
+[data-theme=arcade] .cal-d.today .cal-n, [data-theme=arcade] .wo-cal .cal-d.today .cal-n { color: var(--gold); }
+[data-theme=arcade] .cal-d.paid { background: #2e2a1f; border-color: var(--gold); }
+[data-theme=arcade] .cal-d.due { border: 2px dashed var(--gold); }
+[data-theme=arcade] .cal-fee, [data-theme=arcade] .cal-due { color: var(--gold); }
+[data-theme=arcade] button.cal-d:not(:disabled):hover { border-color: var(--gold); }
+[data-theme=arcade] .cal-stats > div { background: var(--card2); border: 3px solid var(--night); }
+[data-theme=arcade] .cal-stats b { font-size: 13px; }
+[data-theme=arcade] .swipe-dots button::after { background: var(--card2); }
+[data-theme=arcade] .swipe-dots button.on::after { background: var(--gold); }
+
+/* charts */
+[data-theme=arcade] .chart { shape-rendering: crispEdges; }
+[data-theme=arcade] .chart .gl { stroke: var(--card2); stroke-dasharray: 4 4; }
+[data-theme=arcade] .chart rect { rx: 0; stroke: var(--night); stroke-width: 2; }
+[data-theme=arcade] .chart polyline { stroke-linejoin: miter; stroke-width: 4; }
+[data-theme=arcade] .chart circle { stroke: var(--night); stroke-width: 2; }
+[data-theme=arcade] .chart line[stroke-dasharray] { stroke: var(--gold); stroke-opacity: .8; }
+
+/* sleep dial */
+[data-theme=arcade] .sdial { background: var(--deep); border: 3px solid var(--night); }
+[data-theme=arcade] .sd-t { background: var(--card); border: 3px solid var(--night); }
+[data-theme=arcade] .sd-t b { font-family: var(--pixel); font-size: 16px; font-weight: 400; }
+[data-theme=arcade] .sd-t.bed b, [data-theme=arcade] .sd-t.bed svg, [data-theme=arcade] .sd-knob[data-k=bed] .kic { color: var(--sky); }
+[data-theme=arcade] .sd-t.wake b, [data-theme=arcade] .sd-t.wake svg, [data-theme=arcade] .sd-knob[data-k=wake] .kic { color: var(--gold); }
+[data-theme=arcade] .sd-knob[data-k=bed] circle { stroke: var(--sky); }
+[data-theme=arcade] .sd-knob[data-k=wake] circle { stroke: var(--gold); }
+[data-theme=arcade] .sd-knob circle { fill: var(--card); }
+[data-theme=arcade] .sd-track { stroke: var(--night); }
+[data-theme=arcade] .sd-arc { stroke-linecap: butt; }
+
+/* forms, modal, toast, notices */
+[data-theme=arcade] .overlay { background: rgba(13,14,23,.75); }
+[data-theme=arcade] .modal h3 { font-size: 13px; }
+[data-theme=arcade] input, [data-theme=arcade] select { background: var(--deep); border: 3px solid var(--night); box-shadow: inset 2px 2px 0 rgba(0,0,0,.4); }
+[data-theme=arcade] input:focus, [data-theme=arcade] select:focus { border-color: var(--gold); }
+[data-theme=arcade] input[type=checkbox] { accent-color: var(--gold); }
+[data-theme=arcade] .toast { background: var(--gold); border: 3px solid var(--night); color: var(--night); box-shadow: var(--px); }
+[data-theme=arcade] .banner { background: var(--card); border: 3px solid var(--night); color: var(--text); box-shadow: var(--px-sm); }
+[data-theme=arcade] .banner.error, [data-theme=arcade] .imp-errors, [data-theme=arcade] .form-msg.err { background: #3a1a28; border: 3px solid var(--night); color: #ffb3c0; }
+[data-theme=arcade] .form-msg.ok { background: #24402e; border: 3px solid var(--night); color: var(--green); }
+[data-theme=arcade] .drop { border: 3px dashed var(--line); }
+[data-theme=arcade] .drop:hover, [data-theme=arcade] .drop.over { border-color: var(--gold); background: rgba(255,205,117,.06); }
+[data-theme=arcade] .imp-row { background: var(--card2); border: 2px solid var(--night); }
+[data-theme=arcade] .wl-n { font-family: var(--pixel); font-size: 10px; background: var(--deep); border: 3px solid var(--night); }
+[data-theme=arcade] .wl-step.done .wl-n { color: var(--night); border-color: var(--night); }
+
+/* chunky page change */
+[data-theme=arcade] main { animation: arcadeIn .24s steps(4); }
+@keyframes arcadeIn { from { opacity: 0; transform: translateY(8px); } }
+
+@media (max-width: 900px) {
+  [data-theme=arcade] .toast { bottom: 100px; }
+}
+@media (max-width: 600px) {
+  [data-theme=arcade] .sec-head h2 { font-size: 15px; }
+  [data-theme=arcade] .kpi-big { font-size: 14px; }
+  [data-theme=arcade] .dd-title { font-size: 16px; }
+  [data-theme=arcade] .stat .big { font-size: 15px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-theme=arcade] main { animation: none; }
+}
